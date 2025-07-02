@@ -7,6 +7,9 @@
 #include <cstdlib>
 #include <unistd.h>
 #include <cerrno>
+#include <climits>
+#include <vector>
+#include <fcntl.h>
 
 #ifdef _WIN32
 #include <winsock2.h>
@@ -17,6 +20,7 @@
 #endif
 
 #include "Server.hpp"
+#include "EventLoop.hpp"
 
 #define RED "\033[31m"
 #define GREEN "\033[32m"

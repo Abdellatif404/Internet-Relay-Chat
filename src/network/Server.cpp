@@ -30,6 +30,11 @@ void Server::start()
 	exitCode = setsockopt(_serverFd, SOL_SOCKET, SO_REUSEADDR, (char *)&opt, sizeof(opt));
 	_protect(exitCode, "Failed to set socket options");
 
+	#ifdef __linux__
+	exitCode = fcntl(_serverFd, F_SETFL, O_NONBLOCK);
+	_protect(exitCode, "Failed to set socket to non-blocking mode");
+	#endif
+
 	struct sockaddr_in	serverAddr;
 	std::memset(&serverAddr, 0, sizeof(serverAddr));
 	serverAddr.sin_family = AF_INET;
@@ -41,4 +46,9 @@ void Server::start()
 
 	exitCode = listen(_serverFd, SOMAXCONN);
 	_protect(exitCode, "Failed to listen on socket");
+	
+	EventLoop eventLoop(_serverFd);
+
+	std::cout << GREEN << "Server started on port " << _port << RESET << std::endl;
+	eventLoop.run();
 }
