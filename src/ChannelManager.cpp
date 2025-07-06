@@ -1,25 +1,47 @@
 #include "ChannelManager.hpp"
 
-ChannelManager::ChannelManager() {}
-
-ChannelManager::~ChannelManager() {
-	for (std::map<std::string, Channel*>::iterator it = channels.begin(); it != channels.end(); ++it)
-		delete it->second;
+ChannelManager::ChannelManager() {
 }
 
-Channel* ChannelManager::getOrCreate(const std::string& name) {
-	if (channels.find(name) == channels.end())
-		channels[name] = new Channel(name);
-	return channels[name];
+ChannelManager::~ChannelManager() {
+    for (std::map<std::string, Channel*>::iterator it = _channels.begin(); it != _channels.end(); ++it) {
+        delete it->second;
+    }
+    _channels.clear();
+}
+
+// --- Channel Management ---
+Channel* ChannelManager::createChannel(const std::string& name) {
+    if (getChannel(name) != NULL) {
+        return NULL;
+    }
+    Channel* newChannel = new Channel(name);
+    _channels[name] = newChannel;
+    return newChannel;
 }
 
 Channel* ChannelManager::getChannel(const std::string& name) {
-	if (channels.find(name) != channels.end())
-		return channels[name];
-	return NULL;
+    std::map<std::string, Channel*>::iterator it = _channels.find(name);
+    if (it != _channels.end()) {
+        return it->second;
+    }
+    return NULL;
 }
 
-void ChannelManager::removeIfEmpty(Channel* channel) {
-	if (channel && channel->getMemberCount() == 0)
-		channels.erase(channel->getName());
+void ChannelManager::deleteChannel(const std::string& name) {
+    std::map<std::string, Channel*>::iterator it = _channels.find(name);
+    if (it != _channels.end()) {
+        delete it->second;
+        _channels.erase(it);
+    }
+}
+
+void ChannelManager::addUserToChannel(User* user, const std::string& channelName) {
+    Channel* channel = getChannel(channelName);
+    if (channel == NULL) {
+        channel = createChannel(channelName);
+    }
+    if (channel != NULL) {
+        channel->addUser(user);
+    }
 }

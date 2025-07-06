@@ -3,32 +3,55 @@
 
 #include <string>
 #include <set>
-#include "User.hpp"
+#include <vector>
+
+class User; // Forward declaration
 
 class Channel {
 private:
-	std::string name;
-	std::string topic;
-	std::string key;
-	std::set<User*> members;
-	std::set<User*> operators;
-	bool inviteOnly;
-	bool topicRestricted;
-	int userLimit;
+    std::string         _name;
+    std::string         _topic;
+    std::string         _key;
+
+    std::set<User*>     _members;
+    std::set<User*>     _operators;
+
+    bool                _inviteOnly;
+    bool                _topicRestricted;
+    int                 _userLimit;
 
 public:
-	Channel(const std::string& name);
-	~Channel();
+    // --- Constructor & Destructor ---
+    Channel(const std::string& name);
+    ~Channel();
 
-	void addMember(User* user);
-	void removeMember(User* user);
-	bool isMember(User* user) const;
-	void broadcast(const std::string& msg, User* sender);
+    // --- User Management ---
+    void                addUser(User* user);
+    void                removeUser(User* user);
+    void                broadcastMessage(const std::string& message, User* sender);
 
-	void addOperator(User* user);
-	bool isOperator(User* user) const;
+    // --- Getters ---
+    const std::string&  getName() const;
+    const std::string&  getTopic() const;
+    size_t              getMemberCount() const;
 
-	const std::string& getName() const;
+    // --- Operator & Member Checks ---
+    bool                isOperator(User* user) const;
+    bool                isMember(User* user) const;
+
+    // --- Mode Management Functions ---
+    void                setInviteOnly(bool status);
+    void                setTopicRestricted(bool status);
+    void                setKey(const std::string& key);
+    void                setUserLimit(int limit);
+    void                addOperator(User* user);
+    void                removeOperator(User* user);
+    void                setTopic(const std::string& topic);
+
+    // --- Getters for Modes & Attributes ---
+    bool                isInviteOnly() const;
+    const std::string&  getKey() const;
+    int                 getUserLimit() const;
 };
 
 #endif
