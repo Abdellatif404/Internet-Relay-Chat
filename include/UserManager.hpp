@@ -2,9 +2,6 @@
 #define USERMANAGER_HPP
 
 #include "User.hpp"
-#include <map>
-#include <string>
-#include <vector>
 
 class UserManager {
 private:

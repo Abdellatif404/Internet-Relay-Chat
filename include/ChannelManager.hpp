@@ -1,11 +1,7 @@
 #ifndef CHANNEL_MANAGER_HPP
 #define CHANNEL_MANAGER_HPP
 
-#include <string>
-#include <map>
 #include "Channel.hpp"
-
-class User; // Forward declaration
 
 class ChannelManager {
 private:

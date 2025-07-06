@@ -1,14 +1,13 @@
 #ifndef USER_HPP
 #define USER_HPP
 
-#include <string>
-#include <vector>
+#include "ft_irc.hpp"
 
 enum UserState {
     UNREGISTERED,
     PASS_SET,
     NICK_SET,
-    REGISTERED
+	USR_REGISTERED
 };
 
 class User {

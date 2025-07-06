@@ -1,5 +1,4 @@
 #include "User.hpp"
-#include <algorithm>
 
 // Initialize members in the same order as declared in the header
 User::User(int fd) : _fd(fd), _hostname("localhost"), _state(UNREGISTERED), _authenticated(false) {}
@@ -14,7 +13,7 @@ const std::string& User::getRealname() const { return _realname; }
 const std::string& User::getHostname() const { return _hostname; }
 UserState User::getState() const { return _state; }
 bool User::isAuthenticated() const { return _authenticated; }
-bool User::isRegistered() const { return _state == REGISTERED; }
+bool User::isRegistered() const { return _state == USR_REGISTERED; }
 const std::vector<std::string>& User::getChannels() const { return _channels; }
 const std::string& User::getBuffer() const { return _buffer; }
 

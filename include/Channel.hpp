@@ -1,11 +1,7 @@
 #ifndef CHANNEL_HPP
 #define CHANNEL_HPP
 
-#include <string>
-#include <set>
-#include <vector>
-
-class User; // Forward declaration
+#include "ft_irc.hpp"
 
 class Channel {
 private:

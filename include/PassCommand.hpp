@@ -1,11 +1,7 @@
 #ifndef PASSCOMMAND_HPP
 #define PASSCOMMAND_HPP
 
-#include <string>
-#include <vector>
-
-class User;
-class UserManager;
+#include "ft_irc.hpp"
 
 class PassCommand
 {

@@ -1,7 +1,4 @@
 #include "NickCommand.hpp"
-#include "User.hpp"
-#include "UserManager.hpp"
-#include <iostream>
 
 bool NickCommand::execute(User* user, const std::vector<std::string>& params, UserManager* userManager) {
     if (!user->isAuthenticated()) {

@@ -1,7 +1,4 @@
 #include "PassCommand.hpp"
-#include "../../user/User.hpp"
-#include "../../user/UserManager.hpp"
-#include <iostream>
 
 bool PassCommand::execute(User* user, const std::vector<std::string>& params, UserManager* userManager)
 {
