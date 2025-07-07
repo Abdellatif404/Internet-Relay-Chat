@@ -13,6 +13,7 @@
 #include <set>
 #include <map>
 #include <algorithm>
+#include <csignal>
 
 #ifdef _WIN32
 #include <winsock2.h>
