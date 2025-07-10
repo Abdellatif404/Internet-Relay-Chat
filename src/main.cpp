@@ -54,12 +54,11 @@ int	main(int ac, char **av)
 		return 1;
 	}
 	signal(SIGINT, signalHandler);
-	#ifdef __linux__
 	signal(SIGQUIT, signalHandler);
-	#endif
+	signal(SIGTERM, signalHandler);
 	try
 	{
-		int			port = validate_port(av[1]);
+		uint16_t	port = validate_port(av[1]);
 		std::string password = av[2];
 
 		g_server = new Server(port, password);
