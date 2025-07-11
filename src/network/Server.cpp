@@ -1,8 +1,9 @@
 
 #include "Server.hpp"
+#include "SocketHandler.hpp"
 
 Server::Server(uint16_t port, const std::string& password)
-	: _port(port), _password(password), _serverFd(-1)
+	: _port(port), _password(password), _serverFd(-1), _eventLoop(NULL)
 {
 }
 
@@ -35,6 +36,6 @@ void Server::start()
 	SocketHandler::bindSocket(_serverFd, _port);
 	SocketHandler::listenOnSocket(_serverFd);
 
-	_eventLoop = new EventLoop(_serverFd);
+	_eventLoop = new EventLoop(_serverFd, _password);
 	_eventLoop->run();
 }

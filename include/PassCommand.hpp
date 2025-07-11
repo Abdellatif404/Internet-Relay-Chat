@@ -2,6 +2,7 @@
 #define PASSCOMMAND_HPP
 
 #include "ft_irc.hpp"
+#include "UserManager.hpp"
 
 class PassCommand
 {

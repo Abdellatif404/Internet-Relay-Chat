@@ -1,5 +1,6 @@
 
 #include "ft_irc.hpp"
+#include "Server.hpp"
 
 Server *g_server = NULL;
 

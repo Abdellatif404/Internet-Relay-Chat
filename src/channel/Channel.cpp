@@ -29,6 +29,7 @@ void Channel::removeUser(User* user) {
 void Channel::broadcastMessage(const std::string& message, User* sender) {
     for (std::set<User*>::iterator it = _members.begin(); it != _members.end(); ++it) {
         if (*it != sender) {
+			(void)message;
             // In the real server, you'd call a function to send the message
             // e.g., server->sendToClient((*it)->getFd(), message);
         }

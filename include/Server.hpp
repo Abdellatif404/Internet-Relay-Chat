@@ -3,15 +3,14 @@
 #define SERVER_HPP
 
 #include "ft_irc.hpp"
-
-class	EventLoop;
+#include "EventLoop.hpp"
 
 class	Server
 {
 	private:
+		int			_serverFd;
 		uint16_t	_port;
 		std::string	_password;
-		int			_serverFd;
 
 		EventLoop	*_eventLoop;
 

@@ -1,6 +1,6 @@
 
 all:
-	c++ -std=c++98 -Wall -Wextra -Werror -I./include src/*.cpp src/network/*.cpp -o ircserv
+	c++ -std=c++98 -Wall -Wextra -Werror -I./include src/*.cpp src/network/*.cpp src/user/*.cpp src/channel/*.cpp -o ircserv
 clean:
 	rm -f ircserv
 

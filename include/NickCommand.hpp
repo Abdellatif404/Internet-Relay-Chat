@@ -2,6 +2,7 @@
 #define NICKCOMMAND_HPP
 
 #include "ft_irc.hpp"
+#include "UserManager.hpp"
 
 class NickCommand {
 public:

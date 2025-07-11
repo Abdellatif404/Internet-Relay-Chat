@@ -3,8 +3,8 @@
 #define EVENT_LOOP_HPP
 
 #include "ft_irc.hpp"
-
-class	Connection;
+#include "ConnectionManager.hpp"
+#include "ChannelManager.hpp"
 
 class	EventLoop
 {
@@ -12,12 +12,12 @@ class	EventLoop
 		int _epollFd;
 		int _serverFd;
 		std::vector<struct epoll_event>	_events;
-		std::vector<char> 				_readBuffer;
-		std::map<int, Connection*>		_connections;
+		ConnectionManager				*_connectionManager;
+		ChannelManager					*_channelManager;
 
 		void _protect(int status, const std::string& errorMsg);
 	public:
-		EventLoop(int serverFd);
+		EventLoop(int serverFd, const std::string& password);
 		~EventLoop();
 
 		void addSocket(int fd);

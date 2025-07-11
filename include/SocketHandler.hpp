@@ -3,6 +3,8 @@
 #define SOCKET_HANDLER_HPP
 
 #include "ft_irc.hpp"
+#include "Connection.hpp"
+#include "UserManager.hpp"
 
 class SocketHandler
 {
