@@ -4,19 +4,25 @@
 
 #include "ft_irc.hpp"
 #include "Connection.hpp"
-#include "UserManager.hpp"
+
+typedef std::map<int, Connection*> ConnectionMap;
 
 class	ConnectionManager
 {
 	private:
-		std::map<int, Connection*>	_connections;
-		UserManager					*_userManager;
+		ConnectionMap	_connections;
+		MessageBuffer	*_msgBuffer;
+		SendQueue		*_sendQueue;
 	public:
-		ConnectionManager(const std::string& password);
+		ConnectionManager();
 		~ConnectionManager();
 
-		int			createConnection(int socketFd);
-		Connection	*getConnection(int fd);
+		Connection		*getConnection(int fd);
+		MessageBuffer	*getMsgBuffer();
+		SendQueue		*getSendQueue();
+
+		int				createConnection(int fd);
+		void			removeConnection(int fd);
 };
 
 #endif

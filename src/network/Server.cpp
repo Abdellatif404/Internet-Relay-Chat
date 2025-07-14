@@ -1,9 +1,9 @@
-
+ 
 #include "Server.hpp"
 #include "SocketHandler.hpp"
 
 Server::Server(uint16_t port, const std::string& password)
-	: _port(port), _password(password), _serverFd(-1), _eventLoop(NULL)
+	: _serverFd(-1), _port(port), _password(password), _eventLoop(NULL)
 {
 }
 

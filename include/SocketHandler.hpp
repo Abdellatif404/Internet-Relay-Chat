@@ -13,11 +13,11 @@ class SocketHandler
 
 	public:
 		static int			createSocket();
-		static void			setSocketOptions(int socketFd);
-		static void			setNonBlocking(int socketFd);
-		static void			bindSocket(int socketFd, uint16_t port);
-		static void			listenOnSocket(int socketFd);
-		static int			acceptConnection(int socketFd, soaddr_t *addr);
+		static void			setSocketOptions(int fd);
+		static void			setNonBlocking(int fd);
+		static void			bindSocket(int fd, uint16_t port);
+		static void			listenOnSocket(int fd);
+		static int			acceptConnection(int fd, soaddr_t *addr);
 };
 
 #endif

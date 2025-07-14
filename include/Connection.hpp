@@ -3,7 +3,8 @@
 #define CONNECTION_HPP
 
 #include "ft_irc.hpp"
-#include "User.hpp"
+#include "MessageBuffer.hpp"
+#include "SendQueue.hpp"
 
 class	Connection
 {
@@ -11,8 +12,6 @@ class	Connection
 		int					_fd;
 		std::string			_address;
 		uint16_t			_port;
-		User				*_user;
-		std::vector<char>	_recvBuffer;
 	public:
 		Connection(int fd, const std::string& address, uint16_t port);
 		~Connection();
@@ -20,9 +19,9 @@ class	Connection
 		int					getFd() const;
 		const std::string&	getAddress() const;
 		uint16_t			getPort() const;
-		User				*getUser() const;
-		void				setUser(User *user);
-		void				receiveData();
+
+		void				receiveData(MessageBuffer *messageBuffer);
+		void				sendData(SendQueue *sendQueue);
 };
 
 #endif

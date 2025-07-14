@@ -1,38 +1,64 @@
-
+ 
 #include "ConnectionManager.hpp"
 #include "SocketHandler.hpp"
 
-ConnectionManager::ConnectionManager(const std::string& password)
+ConnectionManager::ConnectionManager()
 {
-	_userManager = new UserManager(password);
+	_msgBuffer = new MessageBuffer();
+	_sendQueue = new SendQueue();
 }
 
 ConnectionManager::~ConnectionManager()
 {
+	for (ConnectionMap::iterator it = _connections.begin(); it != _connections.end(); it++)
+	{
+		delete it->second;
+	}
+	delete _msgBuffer;
+	delete _sendQueue;
 }
 
-int	ConnectionManager::createConnection(int socketFd)
+Connection *ConnectionManager::getConnection(int fd)
+{
+	ConnectionMap::iterator it = _connections.find(fd);
+	if (it != _connections.end())
+		return it->second;
+	return NULL;
+}
+
+MessageBuffer* ConnectionManager::getMsgBuffer()
+{
+	return _msgBuffer;
+}
+
+SendQueue* ConnectionManager::getSendQueue()
+{
+	return _sendQueue;
+}
+
+int	ConnectionManager::createConnection(int fd)
 {
 	struct sockaddr_in	clientAddr;
 	std::memset(&clientAddr, 0, sizeof(clientAddr));
 
-	int	clientFd = SocketHandler::acceptConnection(socketFd, (soaddr_t *)&clientAddr);
+	int	clientFd = SocketHandler::acceptConnection(fd, (soaddr_t *)&clientAddr);
 	SocketHandler::setNonBlocking(clientFd);
 
 	std::string	ip = inet_ntoa(clientAddr.sin_addr);
 	uint16_t	port = ntohs(clientAddr.sin_port);
 
-	User		*newUser = _userManager->createUser(clientFd);
 	Connection	*conn = new Connection(clientFd, ip, port);
-	conn->setUser(newUser);
 	_connections[clientFd] = conn;
 	return conn->getFd();
 }
 
-Connection *ConnectionManager::getConnection(int fd)
+void ConnectionManager::removeConnection(int fd)
 {
-	std::map<int, Connection*>::iterator it = _connections.find(fd);
+	ConnectionMap::iterator it = _connections.find(fd);
 	if (it != _connections.end())
-		return it->second;
-	return NULL;
+	{
+		Connection *conn = it->second;
+		delete conn;
+		_connections.erase(it);
+	}
 }

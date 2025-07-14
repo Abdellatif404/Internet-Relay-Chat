@@ -9,6 +9,7 @@
 #include <cerrno>
 #include <climits>
 #include <vector>
+#include <queue>
 #include <fcntl.h>
 #include <set>
 #include <map>

@@ -4,16 +4,18 @@
 
 #include "ft_irc.hpp"
 #include "ConnectionManager.hpp"
+#include "UserManager.hpp"
 #include "ChannelManager.hpp"
 
 class	EventLoop
 {
 	private:
-		int _epollFd;
-		int _serverFd;
+		int _srvFd;
+		int _epFd;
 		std::vector<struct epoll_event>	_events;
-		ConnectionManager				*_connectionManager;
-		ChannelManager					*_channelManager;
+		ConnectionManager				*_connManager;
+		UserManager						*_userManager;
+		ChannelManager					*_chanManager;
 
 		void _protect(int status, const std::string& errorMsg);
 	public:
