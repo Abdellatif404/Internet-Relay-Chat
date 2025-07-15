@@ -1,11 +1,8 @@
 #ifndef NICKCOMMAND_HPP
 #define NICKCOMMAND_HPP
 
-#include <string>
-#include <vector>
-
-class User;
-class UserManager;
+#include "ft_irc.hpp"
+#include "UserManager.hpp"
 
 class NickCommand {
 public:

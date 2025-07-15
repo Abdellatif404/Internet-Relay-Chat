@@ -1,7 +1,4 @@
 #include "UserCommand.hpp"
-#include "../../user/User.hpp"
-#include "../../user/UserManager.hpp"
-#include <iostream>
 
 bool UserCommand::execute(User* user, const std::vector<std::string>& params, UserManager* userManager)
 {

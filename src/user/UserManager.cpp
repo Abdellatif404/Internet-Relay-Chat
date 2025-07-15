@@ -1,8 +1,19 @@
 #include "UserManager.hpp"
-#include <iostream>
 #include <sys/socket.h>
+#include <ctime>
+#include <sstream>
+#include <set>
+#include <algorithm>
 
-UserManager::UserManager(const std::string& password) : _serverPassword(password) {}
+UserManager::UserManager(const std::string& password, SendQueue *sendQueue, const std::string& serverName) 
+    : _serverPassword(password), _sendQueue(sendQueue), _serverName(serverName), _serverVersion("1.0"), _maxUsers(100) {
+    // Three-parameter constructor with explicit server name
+}
+
+UserManager::UserManager(const std::string& password, SendQueue *sendQueue) 
+    : _serverPassword(password), _sendQueue(sendQueue), _serverName("localhost"), _serverVersion("1.0"), _maxUsers(100) {
+    // Constructor overload for EventLoop compatibility - uses default server name
+}
 
 UserManager::~UserManager() {
     for (std::map<int, User*>::iterator it = _users.begin(); it != _users.end(); ++it) {
@@ -99,23 +110,25 @@ void UserManager::sendWelcomeMessages(User* user) {
     
     // 001 RPL_WELCOME
     std::string welcome = ":" + host + " 001 " + nick + " :Welcome to the Internet Relay Network " + user->getPrefix() + "\r\n";
-    sendMessage(user, welcome);
+    _sendQueue->enqueueMessage(user->getFd(), welcome);
     
     // 002 RPL_YOURHOST
     std::string yourhost = ":" + host + " 002 " + nick + " :Your host is " + host + ", running version 1.0\r\n";
-    sendMessage(user, yourhost);
+    _sendQueue->enqueueMessage(user->getFd(), yourhost);
     
     // 003 RPL_CREATED
     std::string created = ":" + host + " 003 " + nick + " :This server was created sometime\r\n";
-    sendMessage(user, created);
+    _sendQueue->enqueueMessage(user->getFd(), created);
     
     // 004 RPL_MYINFO
     std::string myinfo = ":" + host + " 004 " + nick + " " + host + " 1.0 o o\r\n";
-    sendMessage(user, myinfo);
+    _sendQueue->enqueueMessage(user->getFd(), myinfo);
 }
 
 void UserManager::sendMessage(User* user, const std::string& message) {
-    send(user->getFd(), message.c_str(), message.length(), 0);
+    if (_sendQueue && user) {
+        _sendQueue->enqueueMessage(user->getFd(), message);
+    }
 }
 
 std::vector<User*> UserManager::getAllUsers() const {
@@ -128,4 +141,161 @@ std::vector<User*> UserManager::getAllUsers() const {
 
 size_t UserManager::getUserCount() const {
     return _users.size();
+}
+
+bool UserManager::changeNickname(User* user, const std::string& newNickname) {
+    if (!isNicknameAvailable(newNickname)) {
+        return false;
+    }
+    
+    std::string oldNickname = user->getNickname();
+    if (!oldNickname.empty()) {
+        _nicknames.erase(oldNickname);
+    }
+    
+    user->setNickname(newNickname);
+    _nicknames[newNickname] = user;
+    
+    return true;
+}
+
+void UserManager::sendToUser(int fd, const std::string& message) {
+    if (_sendQueue) {
+        _sendQueue->enqueueMessage(fd, message);
+    }
+}
+
+void UserManager::sendPrivateMessage(User* sender, const std::string& targetNick, const std::string& message) {
+    User* target = getUserByNickname(targetNick);
+    if (!target) {
+        // 401 ERR_NOSUCHNICK
+        std::string error = ":localhost 401 " + sender->getNickname() + " " + targetNick + " :No such nick/channel\r\n";
+        sendMessage(sender, error);
+        return;
+    }
+    
+    std::string privmsg = ":" + sender->getPrefix() + " PRIVMSG " + targetNick + " :" + message + "\r\n";
+    sendMessage(target, privmsg);
+}
+
+void UserManager::broadcastToAll(const std::string& message, User* except) {
+    for (std::map<int, User*>::iterator it = _users.begin(); it != _users.end(); ++it) {
+        User* user = it->second;
+        if (user != except && user->isRegistered()) {
+            sendMessage(user, message);
+        }
+    }
+}
+
+void UserManager::setServerOperator(const std::string& nickname) {
+    if (std::find(_operators.begin(), _operators.end(), nickname) == _operators.end()) {
+        _operators.push_back(nickname);
+    }
+}
+
+bool UserManager::isServerOperator(const std::string& nickname) const {
+    return std::find(_operators.begin(), _operators.end(), nickname) != _operators.end();
+}
+
+std::vector<User*> UserManager::getUsersInChannel(const std::string& channel) const {
+    std::vector<User*> channelUsers;
+    for (std::map<int, User*>::const_iterator it = _users.begin(); it != _users.end(); ++it) {
+        User* user = it->second;
+        if (user->isInChannel(channel)) {
+            channelUsers.push_back(user);
+        }
+    }
+    return channelUsers;
+}
+
+bool UserManager::isUserInChannel(const std::string& nickname, const std::string& channel) const {
+    std::map<std::string, User*>::const_iterator it = _nicknames.find(nickname);
+    if (it != _nicknames.end()) {
+        return it->second->isInChannel(channel);
+    }
+    return false;
+}
+
+std::string UserManager::toLowerCase(const std::string& str) const {
+    std::string result = str;
+    for (size_t i = 0; i < result.length(); ++i) {
+        if (result[i] >= 'A' && result[i] <= 'Z') {
+            result[i] = result[i] + ('a' - 'A');
+        }
+    }
+    return result;
+}
+
+void UserManager::handleUserQuit(User* user, const std::string& quitMessage) {
+    if (!user) return;
+    
+    std::string nick = user->getNickname();
+    std::string message = quitMessage.empty() ? "Client Quit" : quitMessage;
+    
+    // Notify all users in channels with this user
+    std::string quitMsg = ":" + user->getPrefix() + " QUIT :" + message + "\r\n";
+    
+    const std::vector<std::string>& channels = user->getChannels();
+    std::set<User*> notifiedUsers;
+    
+    for (std::vector<std::string>::const_iterator it = channels.begin(); it != channels.end(); ++it) {
+        std::vector<User*> channelUsers = getUsersInChannel(*it);
+        for (std::vector<User*>::iterator userIt = channelUsers.begin(); userIt != channelUsers.end(); ++userIt) {
+            if (*userIt != user && notifiedUsers.find(*userIt) == notifiedUsers.end()) {
+                sendMessage(*userIt, quitMsg);
+                notifiedUsers.insert(*userIt);
+            }
+        }
+    }
+    
+    removeUser(user->getFd());
+}
+
+void UserManager::pingUsers() {
+    std::string pingMsg = ":localhost PING :localhost\r\n";
+    
+    for (std::map<int, User*>::iterator it = _users.begin(); it != _users.end(); ++it) {
+        User* user = it->second;
+        if (user->isRegistered()) {
+            sendMessage(user, pingMsg);
+            // Update last ping time would be handled in User class
+        }
+    }
+}
+
+void UserManager::disconnectIdleUsers() {
+    time_t currentTime = time(NULL);
+    const int IDLE_TIMEOUT = 300; // 5 minutes
+    
+    std::vector<int> idleUsers;
+    for (std::map<int, User*>::iterator it = _users.begin(); it != _users.end(); ++it) {
+        User* user = it->second;
+        // This would need lastActivity tracking in User class
+        // For now, just check if user is not registered for too long
+        if (!user->isRegistered() && (currentTime - user->getConnectionTime()) > IDLE_TIMEOUT) {
+            idleUsers.push_back(user->getFd());
+        }
+    }
+    
+    for (std::vector<int>::iterator it = idleUsers.begin(); it != idleUsers.end(); ++it) {
+        removeUser(*it);
+    }
+}
+
+void UserManager::sendError(User* user, int errorCode, const std::string& errorText) {
+    std::string nick = user->getNickname().empty() ? "*" : user->getNickname();
+    std::ostringstream oss;
+    oss << ":localhost " << errorCode << " " << nick;
+    if (!errorText.empty()) {
+        oss << " :" << errorText;
+    }
+    oss << "\r\n";
+    sendMessage(user, oss.str());
+}
+
+void UserManager::sendNumericReply(User* user, int code, const std::string& text) {
+    std::string nick = user->getNickname().empty() ? "*" : user->getNickname();
+    std::ostringstream oss;
+    oss << ":localhost " << code << " " << nick << " " << text << "\r\n";
+    sendMessage(user, oss.str());
 }

@@ -1,11 +1,8 @@
 #ifndef USERCOMMAND_HPP
 #define USERCOMMAND_HPP
 
-#include <string>
-#include <vector>
-
-class User;
-class UserManager;
+#include "ft_irc.hpp"
+#include "UserManager.hpp"
 
 class UserCommand {
 public:
