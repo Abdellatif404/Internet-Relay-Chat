@@ -1,6 +1,4 @@
 #include "User.hpp"
-#include <algorithm>
-#include <cctype>
 
 // Initialize members in the same order as declared in the header
 User::User(int fd) : _fd(fd), _hostname("localhost"), _state(UNREGISTERED), 
@@ -18,8 +16,6 @@ const std::string& User::getHostname() const { return _hostname; }
 UserState User::getState() const { return _state; }
 bool User::isAuthenticated() const { return _authenticated; }
 bool User::isRegistered() const { return _state == REGISTERED; }
-const std::vector<std::string>& User::getChannels() const { return _channels; }
-const std::string& User::getBuffer() const { return _buffer; }
 time_t User::getLastPing() const { return _lastPing; }
 time_t User::getConnectionTime() const { return _connectionTime; }
 bool User::isOperator() const { return _isOperator; }
@@ -39,51 +35,6 @@ void User::setOperator(bool op) { _isOperator = op; }
 void User::setAway(bool away, const std::string& message) {
     _isAway = away;
     _awayMessage = away ? message : "";
-}
-
-// Buffer management
-void User::appendToBuffer(const std::string& data) {
-    _buffer += data;
-}
-
-void User::clearBuffer() {
-    _buffer.clear();
-}
-
-bool User::hasCompleteMessage() const {
-    return _buffer.find("\r\n") != std::string::npos || _buffer.find("\n") != std::string::npos;
-}
-
-std::string User::extractMessage() {
-    size_t pos = _buffer.find("\r\n");
-    if (pos == std::string::npos) {
-        pos = _buffer.find("\n");
-        if (pos == std::string::npos)
-            return "";
-        
-        std::string message = _buffer.substr(0, pos);
-        _buffer.erase(0, pos + 1);
-        return message;
-    }
-    
-    std::string message = _buffer.substr(0, pos);
-    _buffer.erase(0, pos + 2);
-    return message;
-}
-
-// Channel management
-void User::joinChannel(const std::string& channel) {
-    if (!isInChannel(channel)) {
-        _channels.push_back(channel);
-    }
-}
-
-void User::leaveChannel(const std::string& channel) {
-    _channels.erase(std::remove(_channels.begin(), _channels.end(), channel), _channels.end());
-}
-
-bool User::isInChannel(const std::string& channel) const {
-    return std::find(_channels.begin(), _channels.end(), channel) != _channels.end();
 }
 
 std::string User::getPrefix() const {

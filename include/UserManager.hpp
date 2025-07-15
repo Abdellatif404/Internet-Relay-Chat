@@ -51,8 +51,6 @@ public:
     // User queries
     std::vector<User*> getAllUsers() const;
     size_t getUserCount() const;
-    std::vector<User*> getUsersInChannel(const std::string& channel) const;
-    bool isUserInChannel(const std::string& nickname, const std::string& channel) const;
 
     // Utility
     std::string toLowerCase(const std::string& str) const;

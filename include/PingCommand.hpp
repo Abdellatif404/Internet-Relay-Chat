@@ -1,8 +1,7 @@
 #ifndef PINGCOMMAND_HPP
 #define PINGCOMMAND_HPP
 
-#include <string>
-#include <vector>
+#include "ft_irc.hpp"
 
 class User;
 class UserManager;

@@ -1,9 +1,4 @@
 #include "UserManager.hpp"
-#include <sys/socket.h>
-#include <ctime>
-#include <sstream>
-#include <set>
-#include <algorithm>
 
 UserManager::UserManager(const std::string& password, SendQueue *sendQueue, const std::string& serverName) 
     : _serverPassword(password), _sendQueue(sendQueue), _serverName(serverName), _serverVersion("1.0"), _maxUsers(100) {
@@ -197,25 +192,6 @@ bool UserManager::isServerOperator(const std::string& nickname) const {
     return std::find(_operators.begin(), _operators.end(), nickname) != _operators.end();
 }
 
-std::vector<User*> UserManager::getUsersInChannel(const std::string& channel) const {
-    std::vector<User*> channelUsers;
-    for (std::map<int, User*>::const_iterator it = _users.begin(); it != _users.end(); ++it) {
-        User* user = it->second;
-        if (user->isInChannel(channel)) {
-            channelUsers.push_back(user);
-        }
-    }
-    return channelUsers;
-}
-
-bool UserManager::isUserInChannel(const std::string& nickname, const std::string& channel) const {
-    std::map<std::string, User*>::const_iterator it = _nicknames.find(nickname);
-    if (it != _nicknames.end()) {
-        return it->second->isInChannel(channel);
-    }
-    return false;
-}
-
 std::string UserManager::toLowerCase(const std::string& str) const {
     std::string result = str;
     for (size_t i = 0; i < result.length(); ++i) {
@@ -232,22 +208,10 @@ void UserManager::handleUserQuit(User* user, const std::string& quitMessage) {
     std::string nick = user->getNickname();
     std::string message = quitMessage.empty() ? "Client Quit" : quitMessage;
     
-    // Notify all users in channels with this user
+    // Simple quit handling - channel notifications will be handled by ChannelManager
     std::string quitMsg = ":" + user->getPrefix() + " QUIT :" + message + "\r\n";
     
-    const std::vector<std::string>& channels = user->getChannels();
-    std::set<User*> notifiedUsers;
-    
-    for (std::vector<std::string>::const_iterator it = channels.begin(); it != channels.end(); ++it) {
-        std::vector<User*> channelUsers = getUsersInChannel(*it);
-        for (std::vector<User*>::iterator userIt = channelUsers.begin(); userIt != channelUsers.end(); ++userIt) {
-            if (*userIt != user && notifiedUsers.find(*userIt) == notifiedUsers.end()) {
-                sendMessage(*userIt, quitMsg);
-                notifiedUsers.insert(*userIt);
-            }
-        }
-    }
-    
+    // For now, just remove the user - channel system will handle notifications
     removeUser(user->getFd());
 }
 

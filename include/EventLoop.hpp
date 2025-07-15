@@ -6,6 +6,7 @@
 #include "ConnectionManager.hpp"
 #include "UserManager.hpp"
 #include "ChannelManager.hpp"
+#include "MessageParser.hpp"
 
 class	EventLoop
 {
@@ -20,6 +21,7 @@ class	EventLoop
 		SendQueue						*_sendQueue;
 
 		void _protect(int status, const std::string& errorMsg);
+		void _processUserMessages(int fd);  // Process user management messages only
 	public:
 		EventLoop(int serverFd, const std::string& password);
 		~EventLoop();

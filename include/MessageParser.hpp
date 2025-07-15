@@ -1,8 +1,7 @@
 #ifndef MESSAGEPARSER_HPP
 #define MESSAGEPARSER_HPP
 
-#include <string>
-#include <vector>
+#include "ft_irc.hpp"
 
 struct IRCMessage {
     std::string prefix;

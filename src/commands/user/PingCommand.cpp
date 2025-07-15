@@ -1,7 +1,6 @@
 #include "PingCommand.hpp"
 #include "User.hpp"
 #include "UserManager.hpp"
-#include <iostream>
 
 bool PingCommand::execute(User* user, const std::vector<std::string>& params, UserManager* userManager) {
     if (!user->isRegistered()) {
@@ -22,7 +21,7 @@ bool PingCommand::execute(User* user, const std::vector<std::string>& params, Us
     return true;
 }
 
-bool PongCommand::execute(User* user, const std::vector<std::string>& params, UserManager* userManager) {
+bool PongCommand::execute(User* user, const std::vector<std::string>&, UserManager*) {
     // Update user's last ping time to prevent timeout
     user->updateLastPing();
     
