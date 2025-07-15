@@ -2,15 +2,17 @@
 #define USERMANAGER_HPP
 
 #include "User.hpp"
+#include "SendQueue.hpp"
 
 class UserManager {
 private:
     std::map<int, User*> _users;           // fd -> User
     std::map<std::string, User*> _nicknames; // nickname -> User
     std::string _serverPassword;
+	SendQueue* _sendQueue;
 
 public:
-    UserManager(const std::string& password);
+    UserManager(const std::string& password, SendQueue* sendQueue);
     ~UserManager();
 
     // User lifecycle

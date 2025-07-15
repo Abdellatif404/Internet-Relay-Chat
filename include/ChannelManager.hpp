@@ -6,10 +6,11 @@
 class ChannelManager {
 private:
     std::map<std::string, Channel*> _channels;
+	SendQueue*	_sendQueue;
 
 public:
     // --- Constructor & Destructor ---
-    ChannelManager();
+    ChannelManager(SendQueue* sendQueue);
     ~ChannelManager();
 
     // --- Channel Management ---

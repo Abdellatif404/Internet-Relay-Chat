@@ -3,6 +3,7 @@
 
 #include "ft_irc.hpp"
 #include "User.hpp"
+#include "SendQueue.hpp"
 
 class Channel {
 private:
@@ -17,9 +18,11 @@ private:
     bool                _topicRestricted;
     int                 _userLimit;
 
+	SendQueue*			_sendQueue;
+
 public:
     // --- Constructor & Destructor ---
-    Channel(const std::string& name);
+    Channel(const std::string& name, SendQueue* sendQueue);
     ~Channel();
 
     // --- User Management ---

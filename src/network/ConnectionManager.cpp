@@ -4,8 +4,6 @@
 
 ConnectionManager::ConnectionManager()
 {
-	_msgBuffer = new MessageBuffer();
-	_sendQueue = new SendQueue();
 }
 
 ConnectionManager::~ConnectionManager()
@@ -14,8 +12,6 @@ ConnectionManager::~ConnectionManager()
 	{
 		delete it->second;
 	}
-	delete _msgBuffer;
-	delete _sendQueue;
 }
 
 Connection *ConnectionManager::getConnection(int fd)
@@ -26,22 +22,14 @@ Connection *ConnectionManager::getConnection(int fd)
 	return NULL;
 }
 
-MessageBuffer* ConnectionManager::getMsgBuffer()
-{
-	return _msgBuffer;
-}
-
-SendQueue* ConnectionManager::getSendQueue()
-{
-	return _sendQueue;
-}
-
 int	ConnectionManager::createConnection(int fd)
 {
 	struct sockaddr_in	clientAddr;
 	std::memset(&clientAddr, 0, sizeof(clientAddr));
 
 	int	clientFd = SocketHandler::acceptConnection(fd, (soaddr_t *)&clientAddr);
+	if (clientFd < 0)
+		return -1;
 	SocketHandler::setNonBlocking(clientFd);
 
 	std::string	ip = inet_ntoa(clientAddr.sin_addr);

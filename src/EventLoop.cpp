@@ -8,9 +8,11 @@ EventLoop::EventLoop(int serverFd, const std::string& password)
 	_epFd = epoll_create1(0);
 	_protect(_epFd, "Failed to create epoll instance");
 
+	_msgBuffer = new MessageBuffer();
+	_sendQueue = new SendQueue(this);
 	_connManager = new ConnectionManager();
-	_userManager = new UserManager(password);
-	_chanManager = new ChannelManager();
+	_userManager = new UserManager(password, _sendQueue);
+	_chanManager = new ChannelManager(_sendQueue);
 
 	_events.resize(1024);
 	for (size_t i = 0; i < _events.size(); ++i)
@@ -23,7 +25,9 @@ EventLoop::~EventLoop()
 		close(_epFd);
 	delete _connManager;
 	delete _userManager;
-	delete _chanManager; 
+	delete _chanManager;
+	delete _msgBuffer;
+	delete _sendQueue;
 }
 
 void EventLoop::_protect(int status, const std::string& errorMsg)
@@ -31,10 +35,7 @@ void EventLoop::_protect(int status, const std::string& errorMsg)
 	if (status < 0)
 	{
 		if (_epFd >= 0)
-		{
 			close(_epFd);
-			_epFd = -1;
-		}
 		throw std::runtime_error(errorMsg);
 	}
 }
@@ -82,6 +83,8 @@ void EventLoop::handleEvents()
 			if (eventFlags & EPOLLIN)
 			{
 				int connFd = _connManager->createConnection(_srvFd);
+				if (connFd < 0)
+					continue;
 				addSocket(connFd);
 			}
 		}
@@ -104,14 +107,14 @@ void EventLoop::handleEvents()
 				if (!conn)
 					continue;
 				if (eventFlags & EPOLLIN)
-					conn->receiveData(_connManager->getMsgBuffer());
+					conn->receiveData(_msgBuffer);
 				if (eventFlags & EPOLLOUT)
-					conn->sendData(_connManager->getSendQueue());
+				{
+					conn->sendData(_sendQueue);
+					if (!_sendQueue->hasQueuedMessages(eventFd))
+						modifySocket(eventFd, EPOLLIN | EPOLLRDHUP);
+				}
 			}
-			if (_connManager->getSendQueue()->hasQueuedMessages(eventFd))
-				modifySocket(eventFd, EPOLLIN | EPOLLOUT | EPOLLRDHUP);
-			else
-				modifySocket(eventFd, EPOLLIN | EPOLLRDHUP);
 		}
 	}
 }

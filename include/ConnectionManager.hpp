@@ -11,15 +11,11 @@ class	ConnectionManager
 {
 	private:
 		ConnectionMap	_connections;
-		MessageBuffer	*_msgBuffer;
-		SendQueue		*_sendQueue;
 	public:
 		ConnectionManager();
 		~ConnectionManager();
 
 		Connection		*getConnection(int fd);
-		MessageBuffer	*getMsgBuffer();
-		SendQueue		*getSendQueue();
 
 		int				createConnection(int fd);
 		void			removeConnection(int fd);

@@ -7,12 +7,15 @@
 typedef std::queue<std::string> StringQueue;
 typedef std::map<int, StringQueue> ClientQueueMap;
 
+class	EventLoop;
+
 class	SendQueue
 {
 	private:
 		ClientQueueMap	_clientQueues;
+		EventLoop		*_eventLoop;
 	public:
-		SendQueue();
+		SendQueue(EventLoop *eventLoop);
 		~SendQueue();
 
 		void		enqueueMessage(int clientFd, const std::string &message);

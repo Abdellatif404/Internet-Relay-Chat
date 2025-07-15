@@ -16,6 +16,8 @@ class	EventLoop
 		ConnectionManager				*_connManager;
 		UserManager						*_userManager;
 		ChannelManager					*_chanManager;
+		MessageBuffer					*_msgBuffer;
+		SendQueue						*_sendQueue;
 
 		void _protect(int status, const std::string& errorMsg);
 	public:

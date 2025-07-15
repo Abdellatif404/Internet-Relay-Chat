@@ -56,7 +56,7 @@ int	main(int ac, char **av)
 	}
 	signal(SIGINT, signalHandler);
 	signal(SIGQUIT, signalHandler);
-	signal(SIGTERM, signalHandler);
+	signal(SIGPIPE, SIG_IGN);
 	try
 	{
 		uint16_t	port = validate_port(av[1]);

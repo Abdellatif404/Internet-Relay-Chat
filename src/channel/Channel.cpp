@@ -1,7 +1,8 @@
 #include "Channel.hpp"
 
 // --- Constructor ---
-Channel::Channel(const std::string& name) : _name(name) {
+Channel::Channel(const std::string& name, SendQueue* sendQueue)
+	: _name(name), _sendQueue(sendQueue) {
     _topic = "";
     _key = "";
     _inviteOnly = false;
@@ -31,7 +32,7 @@ void Channel::broadcastMessage(const std::string& message, User* sender) {
         if (*it != sender) {
 			(void)message;
             // In the real server, you'd call a function to send the message
-            // e.g., server->sendToClient((*it)->getFd(), message);
+            // e.g., _sendQueue->enqueueMessage((*it)->getFd(), message);
         }
     }
 }

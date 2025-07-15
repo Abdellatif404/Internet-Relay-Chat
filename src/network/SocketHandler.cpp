@@ -49,6 +49,10 @@ int SocketHandler::acceptConnection(int fd, soaddr_t *addr)
 {
 	socklen_t clientAddrLen = sizeof(addr);
 	int clientFd = accept(fd, addr, &clientAddrLen);
-	_protect(clientFd, "Failed to accept new connection");
+	if (clientFd < 0)
+	{
+		std::cerr << YELLOW << "Failed to accept new connection: " << strerror(errno) << RESET << std::endl;
+		return -1;
+	}
 	return clientFd;
 }

@@ -1,6 +1,6 @@
 #include "UserManager.hpp"
 
-UserManager::UserManager(const std::string& password) : _serverPassword(password) {}
+UserManager::UserManager(const std::string& password, SendQueue *sendQueue) : _serverPassword(password), _sendQueue(sendQueue) {}
 
 UserManager::~UserManager() {
     for (std::map<int, User*>::iterator it = _users.begin(); it != _users.end(); ++it) {

@@ -1,7 +1,9 @@
 
 #include "SendQueue.hpp"
+#include "EventLoop.hpp"
 
-SendQueue::SendQueue()
+SendQueue::SendQueue(EventLoop *eventLoop)
+	: _eventLoop(eventLoop)
 {
 };
 
@@ -12,6 +14,7 @@ SendQueue::~SendQueue()
 void SendQueue::enqueueMessage(int clientFd, const std::string &message)
 {
 	_clientQueues[clientFd].push(message);
+	_eventLoop->modifySocket(clientFd, EPOLLIN | EPOLLOUT | EPOLLRDHUP);
 }
 
 bool SendQueue::hasQueuedMessages(int clientFd) const
