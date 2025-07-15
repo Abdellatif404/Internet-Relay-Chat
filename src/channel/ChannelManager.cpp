@@ -1,7 +1,7 @@
 #include "ChannelManager.hpp"
 
-ChannelManager::ChannelManager() {
-}
+ChannelManager::ChannelManager(SendQueue *sendQueue)
+	: _sendQueue(sendQueue) {}
 
 ChannelManager::~ChannelManager() {
     for (std::map<std::string, Channel*>::iterator it = _channels.begin(); it != _channels.end(); ++it) {
@@ -15,7 +15,7 @@ Channel* ChannelManager::createChannel(const std::string& name) {
     if (getChannel(name) != NULL) {
         return NULL;
     }
-    Channel* newChannel = new Channel(name);
+    Channel* newChannel = new Channel(name, _sendQueue);
     _channels[name] = newChannel;
     return newChannel;
 }

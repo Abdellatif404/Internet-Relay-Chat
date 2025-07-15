@@ -3,25 +3,32 @@
 #define EVENT_LOOP_HPP
 
 #include "ft_irc.hpp"
+#include "ConnectionManager.hpp"
+#include "UserManager.hpp"
+#include "ChannelManager.hpp"
 
-class EventLoop
+class	EventLoop
 {
 	private:
-		int _epollFd;
-		int _serverFd;
+		int _srvFd;
+		int _epFd;
 		std::vector<struct epoll_event>	_events;
-		std::vector<char> 				_readBuffer;
+		ConnectionManager				*_connManager;
+		UserManager						*_userManager;
+		ChannelManager					*_chanManager;
+		MessageBuffer					*_msgBuffer;
+		SendQueue						*_sendQueue;
 
 		void _protect(int status, const std::string& errorMsg);
 	public:
-		EventLoop(int serverFd);
+		EventLoop(int serverFd, const std::string& password);
 		~EventLoop();
 
-		void run();
 		void addSocket(int fd);
-		void modifySocket(int fd, int events);
+		void modifySocket(int fd, uint32_t events);
 		void removeSocket(int fd);
 		void handleEvents();
+		void run();
 };
 
 #endif
