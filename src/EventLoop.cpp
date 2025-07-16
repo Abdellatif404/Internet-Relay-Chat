@@ -1,6 +1,12 @@
 
 #include "EventLoop.hpp"
 #include "SocketHandler.hpp"
+#include "PassCommand.hpp"
+#include "NickCommand.hpp"
+#include "UserCommand.hpp"
+#include "PrivMsgCommand.hpp"
+#include "QuitCommand.hpp"
+#include "PingCommand.hpp"
 
 EventLoop::EventLoop(int serverFd, const std::string& password)
 	: _srvFd(serverFd), _epFd(-1)
@@ -106,8 +112,10 @@ void EventLoop::handleEvents()
 				Connection		*conn = _connManager->getConnection(eventFd);
 				if (!conn)
 					continue;
-				if (eventFlags & EPOLLIN)
+				if (eventFlags & EPOLLIN) {
 					conn->receiveData(_msgBuffer);
+					_processUserMessages(eventFd);
+				}
 				if (eventFlags & EPOLLOUT)
 				{
 					conn->sendData(_sendQueue);
@@ -126,5 +134,37 @@ void EventLoop::run()
 	while (true)
 	{
 		handleEvents();
+	}
+}
+
+void EventLoop::_processUserMessages(int fd) {
+	std::string message;
+	while (!(message = _msgBuffer->extractMessage(fd)).empty()) {
+		IRCMessage ircMsg = MessageParser::parse(message);
+		User* user = _userManager->getUser(fd);
+		
+		if (!user)
+			user = _userManager->createUser(fd);
+
+		if (ircMsg.command == "PASS")
+			PassCommand::execute(user, ircMsg.params, _userManager);
+		else if (ircMsg.command == "NICK")
+			NickCommand::execute(user, ircMsg.params, _userManager);
+		else if (ircMsg.command == "USER")
+			UserCommand::execute(user, ircMsg.params, _userManager);
+		else if (ircMsg.command == "PRIVMSG")
+			PrivMsgCommand::execute(user, ircMsg.params, _userManager);
+		else if (ircMsg.command == "QUIT")
+			QuitCommand::execute(user, ircMsg.params, _userManager);
+		else if (ircMsg.command == "PING")
+			PingCommand::execute(user, ircMsg.params, _userManager);
+		else
+    {
+			if (user->isRegistered())
+      {
+				std::string error = ":localhost 421 " + user->getNickname() + " " + ircMsg.command + " :Unknown command\r\n";
+				_userManager->sendMessage(user, error);
+			}
+		}
 	}
 }

@@ -10,6 +10,10 @@ SRCS = src/main.cpp src/EventLoop.cpp \
 		src/commands/user/UserCommand.cpp \
 		src/commands/user/NickCommand.cpp \
 		src/commands/user/PassCommand.cpp \
+		src/commands/user/PingCommand.cpp \
+		src/commands/user/PrivMsgCommand.cpp \
+		src/commands/user/QuitCommand.cpp \
+		src/message/MessageParser.cpp \
 
 OBJ_DIR = obj
 OBJS = $(SRCS:%.cpp=$(OBJ_DIR)/%.o)

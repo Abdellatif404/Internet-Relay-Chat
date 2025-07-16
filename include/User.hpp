@@ -7,7 +7,7 @@ enum UserState {
     UNREGISTERED,
     PASS_SET,
     NICK_SET,
-	USR_REGISTERED
+    REGISTERED
 };
 
 class User {
@@ -19,8 +19,11 @@ private:
     std::string _hostname;
     UserState _state;
     bool _authenticated;
-    std::vector<std::string> _channels;
-    std::string _buffer;
+    time_t _lastPing;
+    time_t _connectionTime;
+    bool _isOperator;
+    std::string _awayMessage;
+    bool _isAway;
 
 public:
     User(int fd);
@@ -35,8 +38,11 @@ public:
     UserState getState() const;
     bool isAuthenticated() const;
     bool isRegistered() const;
-    const std::vector<std::string>& getChannels() const;
-    const std::string& getBuffer() const;
+    time_t getLastPing() const;
+    time_t getConnectionTime() const;
+    bool isOperator() const;
+    const std::string& getAwayMessage() const;
+    bool isAway() const;
 
     // Setters
     void setNickname(const std::string& nickname);
@@ -45,20 +51,20 @@ public:
     void setHostname(const std::string& hostname);
     void setState(UserState state);
     void setAuthenticated(bool auth);
-
-    // Buffer management
-    void appendToBuffer(const std::string& data);
-    void clearBuffer();
-    bool hasCompleteMessage() const;
-    std::string extractMessage();
-
-    // Channel management
-    void joinChannel(const std::string& channel);
-    void leaveChannel(const std::string& channel);
-    bool isInChannel(const std::string& channel) const;
+    void setLastPing(time_t ping);
+    void setOperator(bool op);
+    void setAway(bool away, const std::string& message = "");
 
     // User prefix for messages (nick!user@host)
     std::string getPrefix() const;
+    
+    // Validation methods
+    static bool isValidNickname(const std::string& nick);
+    static bool isValidUsername(const std::string& username);
+    
+    // Utility
+    void updateLastPing();
+    bool needsPing() const;
 };
 
 #endif

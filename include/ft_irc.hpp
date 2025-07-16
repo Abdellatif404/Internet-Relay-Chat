@@ -2,24 +2,41 @@
 #ifndef FT_IRC_HPP
 #define FT_IRC_HPP
 
+// Standard C++ Library
 #include <iostream>
+#include <string>
+#include <vector>
+#include <map>
+#include <set>
+#include <queue>
+#include <algorithm>
+#include <sstream>
+#include <fstream>
+#include <iterator>
+
+// Standard C Library
 #include <cstring>
 #include <cstdlib>
-#include <unistd.h>
-#include <cerrno>
+#include <ctime>
 #include <climits>
-#include <vector>
-#include <queue>
-#include <fcntl.h>
-#include <set>
-#include <map>
-#include <algorithm>
+#include <cerrno>
 #include <csignal>
-#include <sys/epoll.h>
+#include <cctype>
+#include <cstdio>
+
+// POSIX Headers
+#include <unistd.h>
+#include <fcntl.h>
+
+// Network Headers
 #include <sys/socket.h>
+#include <sys/epoll.h>
 #include <arpa/inet.h>
+#include <netinet/in.h>
 
 typedef struct sockaddr soaddr_t;
+
+// Color definitions for terminal output
 
 #define RED "\033[31m"
 #define GREEN "\033[32m"
