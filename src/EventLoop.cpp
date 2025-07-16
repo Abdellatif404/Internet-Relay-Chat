@@ -1,3 +1,4 @@
+
 #include "EventLoop.hpp"
 #include "SocketHandler.hpp"
 #include "PassCommand.hpp"
@@ -113,7 +114,7 @@ void EventLoop::handleEvents()
 					continue;
 				if (eventFlags & EPOLLIN) {
 					conn->receiveData(_msgBuffer);
-					_processUserMessages(eventFd);  // Process user management messages
+					_processUserMessages(eventFd);
 				}
 				if (eventFlags & EPOLLOUT)
 				{
@@ -136,42 +137,31 @@ void EventLoop::run()
 	}
 }
 
-// Process messages for User Management commands only
 void EventLoop::_processUserMessages(int fd) {
 	std::string message;
 	while (!(message = _msgBuffer->extractMessage(fd)).empty()) {
 		IRCMessage ircMsg = MessageParser::parse(message);
 		User* user = _userManager->getUser(fd);
 		
-		if (!user) {
-			// Create user if doesn't exist
+		if (!user)
 			user = _userManager->createUser(fd);
-		}
-		
-		// Process only User Management commands (your part)
-		if (ircMsg.command == "PASS") {
+
+		if (ircMsg.command == "PASS")
 			PassCommand::execute(user, ircMsg.params, _userManager);
-		}
-		else if (ircMsg.command == "NICK") {
+		else if (ircMsg.command == "NICK")
 			NickCommand::execute(user, ircMsg.params, _userManager);
-		}
-		else if (ircMsg.command == "USER") {
+		else if (ircMsg.command == "USER")
 			UserCommand::execute(user, ircMsg.params, _userManager);
-		}
-		else if (ircMsg.command == "PRIVMSG") {
+		else if (ircMsg.command == "PRIVMSG")
 			PrivMsgCommand::execute(user, ircMsg.params, _userManager);
-		}
-		else if (ircMsg.command == "QUIT") {
+		else if (ircMsg.command == "QUIT")
 			QuitCommand::execute(user, ircMsg.params, _userManager);
-		}
-		else if (ircMsg.command == "PING") {
+		else if (ircMsg.command == "PING")
 			PingCommand::execute(user, ircMsg.params, _userManager);
-		}
-		// TODO: Channel commands (JOIN, PART, etc.) will be handled by channel system
-		// TODO: Other server commands will be handled by their respective systems
-		else {
-			// Unknown command - send error
-			if (user->isRegistered()) {
+		else
+    {
+			if (user->isRegistered())
+      {
 				std::string error = ":localhost 421 " + user->getNickname() + " " + ircMsg.command + " :Unknown command\r\n";
 				_userManager->sendMessage(user, error);
 			}

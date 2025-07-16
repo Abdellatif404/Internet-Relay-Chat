@@ -2,7 +2,6 @@
 #define USER_HPP
 
 #include "ft_irc.hpp"
-#include <ctime>
 
 enum UserState {
     UNREGISTERED,

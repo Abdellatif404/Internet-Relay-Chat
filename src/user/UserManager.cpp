@@ -92,7 +92,7 @@ bool UserManager::tryCompleteRegistration(User* user) {
         !user->getUsername().empty() &&
         user->getState() == NICK_SET) {
         
-        user->setState(REGISTERED);
+        user->setState(USR_REGISTERED);
         sendWelcomeMessages(user);
         return true;
     }

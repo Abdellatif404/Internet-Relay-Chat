@@ -21,7 +21,7 @@ class	EventLoop
 		SendQueue						*_sendQueue;
 
 		void _protect(int status, const std::string& errorMsg);
-		void _processUserMessages(int fd);  // Process user management messages only
+		void _processUserMessages(int fd);
 	public:
 		EventLoop(int serverFd, const std::string& password);
 		~EventLoop();

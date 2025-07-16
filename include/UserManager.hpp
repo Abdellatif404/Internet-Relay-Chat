@@ -3,7 +3,6 @@
 
 #include "User.hpp"
 #include "SendQueue.hpp"
-#include <vector>
 
 class UserManager {
 private:
