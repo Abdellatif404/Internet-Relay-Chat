@@ -4,12 +4,12 @@ bool PassCommand::execute(User* user, const std::vector<std::string>& params, Us
 {
     if (user->isAuthenticated()) {
         std::string nick = user->getNickname().empty() ? "*" : user->getNickname();
-        std::string error = ":localhost 462 " + nick + " :You may not reregister\r\n";
+        std::string error = ":localhost " + std::string(ERR_ALREADYREGISTRED) + " " + nick + " :You may not reregister\r\n";
         userManager->sendMessage(user, error);
         return false;
     }
     if (params.empty()) {
-        std::string error = ":localhost 461 * PASS :Not enough parameters\r\n";
+        std::string error = ":localhost " + std::string(ERR_NEEDMOREPARAMS) + " * PASS :Not enough parameters\r\n";
         userManager->sendMessage(user, error);
         return false;
     }
@@ -18,7 +18,7 @@ bool PassCommand::execute(User* user, const std::vector<std::string>& params, Us
         std::cout << "User on fd " << user->getFd() << " authenticated successfully" << std::endl;
         return true;
     } else {
-        std::string error = ":localhost 464 * :Password incorrect\r\n";
+        std::string error = ":localhost " + std::string(ERR_PASSWDMISMATCH) + " * :Password incorrect\r\n";
         userManager->sendMessage(user, error);
         return false;
     }

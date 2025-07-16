@@ -31,7 +31,7 @@ void UserManager::removeUser(int fd) {
         
         // Remove from nickname map
         if (!user->getNickname().empty()) {
-            _nicknames.erase(user->getNickname());
+            _nicknames.erase(toLowerCase(user->getNickname()));
         }
         
         delete user;
@@ -45,7 +45,7 @@ User* UserManager::getUser(int fd) {
 }
 
 User* UserManager::getUserByNickname(const std::string& nickname) {
-    std::map<std::string, User*>::iterator it = _nicknames.find(nickname);
+    std::map<std::string, User*>::iterator it = _nicknames.find(toLowerCase(nickname));
     return (it != _nicknames.end()) ? it->second : NULL;
 }
 
@@ -59,21 +59,22 @@ bool UserManager::authenticateUser(User* user, const std::string& password) {
 }
 
 bool UserManager::isNicknameAvailable(const std::string& nickname) {
-    return _nicknames.find(nickname) == _nicknames.end();
+    return _nicknames.find(toLowerCase(nickname)) == _nicknames.end();
 }
 
 bool UserManager::registerNickname(User* user, const std::string& nickname) {
+    std::string lowerNick = toLowerCase(nickname);
     if (!isNicknameAvailable(nickname)) {
         return false;
     }
     
     // Remove old nickname if exists
     if (!user->getNickname().empty()) {
-        _nicknames.erase(user->getNickname());
+        _nicknames.erase(toLowerCase(user->getNickname()));
     }
     
     user->setNickname(nickname);
-    _nicknames[nickname] = user;
+    _nicknames[lowerNick] = user;
     
     if (user->getState() == PASS_SET) {
         user->setState(NICK_SET);
@@ -83,7 +84,7 @@ bool UserManager::registerNickname(User* user, const std::string& nickname) {
 }
 
 void UserManager::unregisterNickname(const std::string& nickname) {
-    _nicknames.erase(nickname);
+    _nicknames.erase(toLowerCase(nickname));
 }
 
 bool UserManager::tryCompleteRegistration(User* user) {
@@ -92,7 +93,7 @@ bool UserManager::tryCompleteRegistration(User* user) {
         !user->getUsername().empty() &&
         user->getState() == NICK_SET) {
         
-        user->setState(USR_REGISTERED);
+        user->setState(REGISTERED);
         sendWelcomeMessages(user);
         return true;
     }
@@ -104,20 +105,29 @@ void UserManager::sendWelcomeMessages(User* user) {
     std::string host = "localhost";
     
     // 001 RPL_WELCOME
-    std::string welcome = ":" + host + " 001 " + nick + " :Welcome to the Internet Relay Network " + user->getPrefix() + "\r\n";
+    std::string welcome = ":" + host + " " + RPL_WELCOME + " " + nick + " :Welcome to the Internet Relay Network " + user->getPrefix() + "\r\n";
     _sendQueue->enqueueMessage(user->getFd(), welcome);
     
     // 002 RPL_YOURHOST
-    std::string yourhost = ":" + host + " 002 " + nick + " :Your host is " + host + ", running version 1.0\r\n";
+    std::string yourhost = ":" + host + " " + RPL_YOURHOST + " " + nick + " :Your host is " + host + ", running version 1.0\r\n";
     _sendQueue->enqueueMessage(user->getFd(), yourhost);
     
     // 003 RPL_CREATED
-    std::string created = ":" + host + " 003 " + nick + " :This server was created sometime\r\n";
+    std::string created = ":" + host + " " + RPL_CREATED + " " + nick + " :This server was created sometime\r\n";
     _sendQueue->enqueueMessage(user->getFd(), created);
     
     // 004 RPL_MYINFO
-    std::string myinfo = ":" + host + " 004 " + nick + " " + host + " 1.0 o o\r\n";
+    std::string myinfo = ":" + host + " " + RPL_MYINFO + " " + nick + " " + host + " 1.0 oir owimnstkl\r\n";
     _sendQueue->enqueueMessage(user->getFd(), myinfo);
+    
+    // 005 RPL_ISUPPORT - Modern IRC server capabilities
+    std::string isupport1 = ":" + host + " " + RPL_ISUPPORT + " " + nick + " CASEMAPPING=rfc1459 CHANLIMIT=#:20 CHANNELLEN=50 CHANTYPES=# ELIST=U EXCEPTS INVEX";
+    isupport1 += " KICKLEN=307 MAXLIST=bqeI:100 MODES=4 NETWORK=ft_irc :are supported by this server\r\n";
+    _sendQueue->enqueueMessage(user->getFd(), isupport1);
+    
+    std::string isupport2 = ":" + host + " " + RPL_ISUPPORT + " " + nick + " NICKLEN=30 PREFIX=(oir)@%+ SAFELIST STATUSMSG=@%+ STD=rfc2812";
+    isupport2 += " TARGMAX=NAMES:1,LIST:1,KICK:1,WHOIS:1,PRIVMSG:4,NOTICE:4,ACCEPT:,MONITOR: :are supported by this server\r\n";
+    _sendQueue->enqueueMessage(user->getFd(), isupport2);
 }
 
 void UserManager::sendMessage(User* user, const std::string& message) {
@@ -145,11 +155,11 @@ bool UserManager::changeNickname(User* user, const std::string& newNickname) {
     
     std::string oldNickname = user->getNickname();
     if (!oldNickname.empty()) {
-        _nicknames.erase(oldNickname);
+        _nicknames.erase(toLowerCase(oldNickname));
     }
     
     user->setNickname(newNickname);
-    _nicknames[newNickname] = user;
+    _nicknames[toLowerCase(newNickname)] = user;
     
     return true;
 }
@@ -164,7 +174,7 @@ void UserManager::sendPrivateMessage(User* sender, const std::string& targetNick
     User* target = getUserByNickname(targetNick);
     if (!target) {
         // 401 ERR_NOSUCHNICK
-        std::string error = ":localhost 401 " + sender->getNickname() + " " + targetNick + " :No such nick/channel\r\n";
+        std::string error = ":localhost " + std::string(ERR_NOSUCHNICK) + " " + sender->getNickname() + " " + targetNick + " :No such nick/channel\r\n";
         sendMessage(sender, error);
         return;
     }
@@ -195,8 +205,17 @@ bool UserManager::isServerOperator(const std::string& nickname) const {
 std::string UserManager::toLowerCase(const std::string& str) const {
     std::string result = str;
     for (size_t i = 0; i < result.length(); ++i) {
+        // RFC 2812: IRC case mapping
         if (result[i] >= 'A' && result[i] <= 'Z') {
             result[i] = result[i] + ('a' - 'A');
+        } else if (result[i] == '[') {
+            result[i] = '{';
+        } else if (result[i] == ']') {
+            result[i] = '}';
+        } else if (result[i] == '\\') {
+            result[i] = '|';
+        } else if (result[i] == '~') {
+            result[i] = '^';
         }
     }
     return result;

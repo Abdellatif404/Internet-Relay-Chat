@@ -3,20 +3,20 @@
 bool UserCommand::execute(User* user, const std::vector<std::string>& params, UserManager* userManager)
 {
     if (!user->isAuthenticated()) {
-        std::string error = ":localhost 464 * :Password required\r\n";
+        std::string error = ":localhost " + std::string(ERR_PASSWDMISMATCH) + " * :Password required\r\n";
         userManager->sendMessage(user, error);
         return false;
     }
     
     if (params.size() < 4) {
         std::string nick = user->getNickname().empty() ? "*" : user->getNickname();
-        std::string error = ":localhost 461 " + nick + " USER :Not enough parameters\r\n";
+        std::string error = ":localhost " + std::string(ERR_NEEDMOREPARAMS) + " " + nick + " USER :Not enough parameters\r\n";
         userManager->sendMessage(user, error);
         return false;
     }
     
     if (user->isRegistered()) {
-        std::string error = ":localhost 462 " + user->getNickname() + " :You may not reregister\r\n";
+        std::string error = ":localhost " + std::string(ERR_ALREADYREGISTRED) + " " + user->getNickname() + " :You may not reregister\r\n";
         userManager->sendMessage(user, error);
         return false;
     }
@@ -25,6 +25,14 @@ bool UserCommand::execute(User* user, const std::vector<std::string>& params, Us
     // params[1] is mode (ignored for now)
     // params[2] is unused (should be *)
     std::string realname = parseRealname(params, 3);
+    
+    // Validate username format (RFC 2812)
+    if (!User::isValidUsername(username)) {
+        std::string nick = user->getNickname().empty() ? "*" : user->getNickname();
+        std::string error = ":localhost " + std::string(ERR_ERRONEUSNICKNAME) + " " + nick + " :Invalid username\r\n";
+        userManager->sendMessage(user, error);
+        return false;
+    }
     
     user->setUsername(username);
     user->setRealname(realname);

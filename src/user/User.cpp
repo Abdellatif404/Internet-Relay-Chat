@@ -43,20 +43,40 @@ std::string User::getPrefix() const {
 
 // Validation methods
 bool User::isValidNickname(const std::string& nick) {
-    if (nick.empty() || nick.length() > 30)
+    if (nick.empty() || nick.length() > 30)  // Modern IRC: up to 30 characters (will be advertised in NICKLEN)
         return false;
     
-    // First character must be letter or special character
-    if (!std::isalpha(nick[0]) && nick[0] != '[' && nick[0] != ']' && 
-        nick[0] != '{' && nick[0] != '}' && nick[0] != '\\' && 
-        nick[0] != '|' && nick[0] != '_' && nick[0] != '^')
+    // Modern IRC restrictions: no space, comma, asterisk, question mark, 
+    // exclamation mark, at sign, no leading $, :, or channel type chars
+    for (size_t i = 0; i < nick.length(); i++) {
+        char c = nick[i];
+        // Forbidden characters in modern IRC
+        if (c == ' ' || c == ',' || c == '*' || c == '?' || 
+            c == '!' || c == '@' || c == '\r' || c == '\n' || c == '\0')
+            return false;
+    }
+    
+    // First character restrictions
+    char firstChar = nick[0];
+    // Cannot start with $, :, or channel type characters (#, &, +)
+    if (firstChar == '$' || firstChar == ':' || firstChar == '#' || 
+        firstChar == '&' || firstChar == '+')
         return false;
     
-    // Rest can be alphanumeric or special characters
+    // First character must be letter or special character (RFC 2812)
+    // special = %x5B-60 / %x7B-7D = "[", "]", "\", "`", "_", "^", "{", "|", "}"
+    if (!std::isalpha(firstChar) && firstChar != '[' && firstChar != ']' && 
+        firstChar != '\\' && firstChar != '`' && firstChar != '_' && 
+        firstChar != '^' && firstChar != '{' && firstChar != '|' && firstChar != '}')
+        return false;
+    
+    // Rest can be alphanumeric, special characters, or hyphen
     for (size_t i = 1; i < nick.length(); i++) {
-        if (!std::isalnum(nick[i]) && nick[i] != '[' && nick[i] != ']' && 
-            nick[i] != '{' && nick[i] != '}' && nick[i] != '\\' && 
-            nick[i] != '|' && nick[i] != '_' && nick[i] != '^' && nick[i] != '-')
+        char c = nick[i];
+        if (!std::isalnum(c) && c != '[' && c != ']' && 
+            c != '\\' && c != '`' && c != '_' && 
+            c != '^' && c != '{' && c != '|' && 
+            c != '}' && c != '-')
             return false;
     }
     
