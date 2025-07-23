@@ -5,8 +5,8 @@
 #include "UserManager.hpp"
 #include "SendQueue.hpp"
 
-KickCommand::KickCommand(ChannelManager* channelManager, SendQueue* sendQueue)
-    : _channelManager(channelManager), _sendQueue(sendQueue) {
+KickCommand::KickCommand(ChannelManager* channelManager, UserManager* userManager, SendQueue* sendQueue)
+    : _channelManager(channelManager), _userManager(userManager), _sendQueue(sendQueue) {
 }
 
 KickCommand::~KickCommand() {
@@ -49,9 +49,7 @@ void KickCommand::execute(User* user, const std::vector<std::string>& params) {
         return;
     }
 
-    // TODO: Find target user by nickname using UserManager
-    // For now, this is a placeholder that would need UserManager integration
-    /*
+    // Find target user by nickname using UserManager
     User* targetUser = _userManager->getUserByNickname(targetNick);
     
     if (!targetUser) {
@@ -69,11 +67,6 @@ void KickCommand::execute(User* user, const std::vector<std::string>& params) {
     // Broadcast kick message and remove user
     broadcastKick(user, targetUser, channelName, reason);
     channel->kickUser(targetUser, user, reason);
-    */
-
-    // Placeholder response for now
-    std::string errorMsg = ":server " ERR_NOSUCHNICK " " + user->getNickname() + " " + targetNick + " :No such nick/channel\r\n";
-    _sendQueue->enqueueMessage(user->getFd(), errorMsg);
 }
 
 void KickCommand::broadcastKick(User* kicker, User* kicked, 

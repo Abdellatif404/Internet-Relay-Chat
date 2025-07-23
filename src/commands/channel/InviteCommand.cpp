@@ -49,9 +49,7 @@ void InviteCommand::execute(User* user, const std::vector<std::string>& params) 
         return;
     }
 
-    // TODO: Find target user by nickname using UserManager
-    // For now, this is a placeholder that would need UserManager integration
-    /*
+    // Find target user by nickname using UserManager
     User* targetUser = _userManager->getUserByNickname(targetNick);
     
     if (!targetUser) {
@@ -74,11 +72,6 @@ void InviteCommand::execute(User* user, const std::vector<std::string>& params) 
 
     // Send invite reply to inviting user
     sendInviteReply(user, targetNick, channelName);
-    */
-
-    // Placeholder response for now
-    std::string errorMsg = ":server " ERR_NOSUCHNICK " " + user->getNickname() + " " + targetNick + " :No such nick/channel\r\n";
-    _sendQueue->enqueueMessage(user->getFd(), errorMsg);
 }
 
 void InviteCommand::sendInviteNotification(User* inviter, User* invited, const std::string& channelName) {

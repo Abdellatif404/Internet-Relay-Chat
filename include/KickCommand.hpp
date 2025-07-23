@@ -5,15 +5,17 @@
 
 class User;
 class ChannelManager;
+class UserManager;
 class SendQueue;
 
 class KickCommand {
 private:
     ChannelManager* _channelManager;
+    UserManager* _userManager;
     SendQueue* _sendQueue;
 
 public:
-    KickCommand(ChannelManager* channelManager, SendQueue* sendQueue);
+    KickCommand(ChannelManager* channelManager, UserManager* userManager, SendQueue* sendQueue);
     ~KickCommand();
 
     void execute(User* user, const std::vector<std::string>& params);

@@ -5,15 +5,17 @@
 
 class User;
 class ChannelManager;
+class UserManager;
 class SendQueue;
 
 class ModeCommand {
 private:
     ChannelManager* _channelManager;
+    UserManager* _userManager;
     SendQueue* _sendQueue;
 
 public:
-    ModeCommand(ChannelManager* channelManager, SendQueue* sendQueue);
+    ModeCommand(ChannelManager* channelManager, UserManager* userManager, SendQueue* sendQueue);
     ~ModeCommand();
 
     void execute(User* user, const std::vector<std::string>& params);

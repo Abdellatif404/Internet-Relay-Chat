@@ -5,8 +5,8 @@
 #include "UserManager.hpp"
 #include "SendQueue.hpp"
 
-ModeCommand::ModeCommand(ChannelManager* channelManager, SendQueue* sendQueue)
-    : _channelManager(channelManager), _sendQueue(sendQueue) {
+ModeCommand::ModeCommand(ChannelManager* channelManager, UserManager* userManager, SendQueue* sendQueue)
+    : _channelManager(channelManager), _userManager(userManager), _sendQueue(sendQueue) {
 }
 
 ModeCommand::~ModeCommand() {
@@ -180,12 +180,17 @@ void ModeCommand::applyMode(User* user, const std::string& channelName,
             break;
         case 'o': // operator
             if (!arg.empty()) {
-                // Here you would need UserManager to find user by nickname
-                // For now, this is a placeholder
-                if (add) {
-                    // channel->addOperator(targetUser);
+                User* targetUser = _userManager->getUserByNickname(arg);
+                if (targetUser && channel->isMember(targetUser)) {
+                    if (add) {
+                        channel->addOperator(targetUser);
+                    } else {
+                        channel->removeOperator(targetUser);
+                    }
                 } else {
-                    // channel->removeOperator(targetUser);
+                    std::string errorMsg = ":server " ERR_NOSUCHNICK " " + user->getNickname() + " " + arg + " :No such nick/channel\r\n";
+                    _sendQueue->enqueueMessage(user->getFd(), errorMsg);
+                    throw std::runtime_error("User not found");
                 }
             }
             break;

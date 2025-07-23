@@ -72,6 +72,7 @@ typedef struct sockaddr soaddr_t;
 #define ERR_NICKCOLLISION   "436"
 #define ERR_NOTONCHANNEL    "442"
 #define ERR_USERONCHANNEL   "443"
+#define ERR_USERNOTINCHANNEL "441"
 #define ERR_NOTREGISTERED   "451"
 #define ERR_NEEDMOREPARAMS  "461"
 #define ERR_ALREADYREGISTRED "462"
