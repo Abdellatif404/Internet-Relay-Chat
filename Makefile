@@ -13,6 +13,13 @@ SRCS = src/main.cpp src/EventLoop.cpp \
 		src/commands/user/PingCommand.cpp \
 		src/commands/user/PrivMsgCommand.cpp \
 		src/commands/user/QuitCommand.cpp \
+		src/commands/user/CapCommand.cpp \
+		src/commands/channel/JoinCommand.cpp \
+		src/commands/channel/PartCommand.cpp \
+		src/commands/channel/TopicCommand.cpp \
+		src/commands/channel/ModeCommand.cpp \
+		src/commands/channel/KickCommand.cpp \
+		src/commands/channel/InviteCommand.cpp \
 		src/message/MessageParser.cpp \
 
 OBJ_DIR = obj
