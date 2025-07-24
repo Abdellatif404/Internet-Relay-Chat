@@ -1,27 +1,44 @@
 #include "UserManager.hpp"
 
 UserManager::UserManager(const std::string& password, SendQueue *sendQueue, const std::string& serverName) 
-    : _serverPassword(password), _sendQueue(sendQueue), _serverName(serverName), _serverVersion("1.0"), _maxUsers(100) {
+    : _serverPassword(password), _sendQueue(sendQueue), _serverName(serverName), _serverVersion("1.0"), _maxUsers(100),
+      _periodicStatsEnabled(false), _lastStatsTime(time(NULL)) {
     // Three-parameter constructor with explicit server name
 }
 
 UserManager::UserManager(const std::string& password, SendQueue *sendQueue) 
-    : _serverPassword(password), _sendQueue(sendQueue), _serverName("localhost"), _serverVersion("1.0"), _maxUsers(100) {
+    : _serverPassword(password), _sendQueue(sendQueue), _serverName("localhost"), _serverVersion("1.0"), _maxUsers(100),
+      _periodicStatsEnabled(false), _lastStatsTime(time(NULL)) {
     // Constructor overload for EventLoop compatibility - uses default server name
 }
 
 UserManager::~UserManager() {
+    // Clean up all users
     for (std::map<int, User*>::iterator it = _users.begin(); it != _users.end(); ++it) {
-        delete it->second;
+        if (it->second) { // Null check for safety
+            delete it->second;
+        }
     }
     _users.clear();
-    _nicknames.clear();
+    _nicknames.clear(); // This should already be empty after user cleanup, but clear for safety
 }
 
 User* UserManager::createUser(int fd) {
-    User* user = new User(fd);
-    _users[fd] = user;
-    return user;
+    // Check if user already exists to avoid duplicates
+    std::map<int, User*>::iterator it = _users.find(fd);
+    if (it != _users.end()) {
+        return it->second; // User already exists, return existing one
+    }
+    
+    try {
+        User* user = new User(fd);
+        _users[fd] = user;
+        return user;
+    } catch (const std::exception& e) {
+        // If allocation fails, ensure we don't have dangling entries
+        _users.erase(fd);
+        throw;
+    }
 }
 
 void UserManager::removeUser(int fd) {
@@ -29,13 +46,20 @@ void UserManager::removeUser(int fd) {
     if (it != _users.end()) {
         User* user = it->second;
         
-        // Remove from nickname map
+        // Remove from nickname map first (before deleting user)
         if (!user->getNickname().empty()) {
-            _nicknames.erase(toLowerCase(user->getNickname()));
+            std::string lowerNick = toLowerCase(user->getNickname());
+            std::map<std::string, User*>::iterator nickIt = _nicknames.find(lowerNick);
+            if (nickIt != _nicknames.end() && nickIt->second == user) {
+                _nicknames.erase(nickIt);
+            }
         }
         
-        delete user;
+        // Remove from users map
         _users.erase(it);
+        
+        // Delete the user object last
+        delete user;
     }
 }
 
@@ -63,14 +87,24 @@ bool UserManager::isNicknameAvailable(const std::string& nickname) {
 }
 
 bool UserManager::registerNickname(User* user, const std::string& nickname) {
+    if (!user) return false;
+    
     std::string lowerNick = toLowerCase(nickname);
-    if (!isNicknameAvailable(nickname)) {
-        return false;
+    
+    // Check if nickname is available (but allow user to re-register same nick)
+    std::map<std::string, User*>::iterator it = _nicknames.find(lowerNick);
+    if (it != _nicknames.end() && it->second != user) {
+        return false; // Nickname taken by another user
     }
     
     // Remove old nickname if exists
-    if (!user->getNickname().empty()) {
-        _nicknames.erase(toLowerCase(user->getNickname()));
+    std::string oldNickname = user->getNickname();
+    if (!oldNickname.empty()) {
+        std::string oldLowerNick = toLowerCase(oldNickname);
+        std::map<std::string, User*>::iterator oldIt = _nicknames.find(oldLowerNick);
+        if (oldIt != _nicknames.end() && oldIt->second == user) {
+            _nicknames.erase(oldIt);
+        }
     }
     
     user->setNickname(nickname);
@@ -149,17 +183,27 @@ size_t UserManager::getUserCount() const {
 }
 
 bool UserManager::changeNickname(User* user, const std::string& newNickname) {
-    if (!isNicknameAvailable(newNickname)) {
-        return false;
+    if (!user) return false;
+    
+    std::string newLowerNick = toLowerCase(newNickname);
+    
+    // Check if new nickname is available (but allow user to keep same nick)
+    std::map<std::string, User*>::iterator it = _nicknames.find(newLowerNick);
+    if (it != _nicknames.end() && it->second != user) {
+        return false; // Nickname taken by another user
     }
     
     std::string oldNickname = user->getNickname();
     if (!oldNickname.empty()) {
-        _nicknames.erase(toLowerCase(oldNickname));
+        std::string oldLowerNick = toLowerCase(oldNickname);
+        std::map<std::string, User*>::iterator oldIt = _nicknames.find(oldLowerNick);
+        if (oldIt != _nicknames.end() && oldIt->second == user) {
+            _nicknames.erase(oldIt);
+        }
     }
     
     user->setNickname(newNickname);
-    _nicknames[toLowerCase(newNickname)] = user;
+    _nicknames[newLowerNick] = user;
     
     return true;
 }
@@ -224,6 +268,12 @@ std::string UserManager::toLowerCase(const std::string& str) const {
 void UserManager::handleUserQuit(User* user, const std::string& quitMessage) {
     if (!user) return;
     
+    // Check if user still exists in our map to avoid double-deletion
+    std::map<int, User*>::iterator it = _users.find(user->getFd());
+    if (it == _users.end()) {
+        return; // User already removed
+    }
+    
     std::string nick = user->getNickname();
     std::string message = quitMessage.empty() ? "Client Quit" : quitMessage;
     
@@ -255,11 +305,12 @@ void UserManager::disconnectIdleUsers() {
         User* user = it->second;
         // This would need lastActivity tracking in User class
         // For now, just check if user is not registered for too long
-        if (!user->isRegistered() && (currentTime - user->getConnectionTime()) > IDLE_TIMEOUT) {
+        if (user && !user->isRegistered() && (currentTime - user->getConnectionTime()) > IDLE_TIMEOUT) {
             idleUsers.push_back(user->getFd());
         }
     }
     
+    // Remove idle users in separate loop to avoid iterator invalidation
     for (std::vector<int>::iterator it = idleUsers.begin(); it != idleUsers.end(); ++it) {
         removeUser(*it);
     }
@@ -281,4 +332,57 @@ void UserManager::sendNumericReply(User* user, int code, const std::string& text
     std::ostringstream oss;
     oss << ":localhost " << code << " " << nick << " " << text << "\r\n";
     sendMessage(user, oss.str());
+}
+
+void UserManager::handleDisconnection(int fd) {
+    User* user = getUser(fd);
+    if (user) {
+        // Notify other users about the disconnection if user was registered
+        if (user->isRegistered()) {
+            std::string quitMsg = ":" + user->getPrefix() + " QUIT :Connection closed\r\n";
+            // TODO: Notify channels when channel system is integrated
+        }
+        
+        // Clean up the user
+        removeUser(fd);
+    }
+}
+
+void UserManager::printMemoryStats() const {
+    std::cout << "=== UserManager Memory Statistics ===" << std::endl;
+    std::cout << "Active users: " << _users.size() << std::endl;
+    std::cout << "Active nicknames: " << _nicknames.size() << std::endl;
+    std::cout << "Server operators: " << _operators.size() << std::endl;
+    
+    // Check for consistency between maps
+    if (_users.size() != _nicknames.size()) {
+        std::cout << "⚠️  WARNING: User/Nickname map size mismatch!" << std::endl;
+    }
+    
+    // Count registered vs unregistered users
+    int registered = 0, unregistered = 0;
+    for (std::map<int, User*>::const_iterator it = _users.begin(); it != _users.end(); ++it) {
+        if (it->second) {
+            if (it->second->isRegistered()) {
+                registered++;
+            } else {
+                unregistered++;
+            }
+        }
+    }
+    
+    std::cout << "Registered users: " << registered << std::endl;
+    std::cout << "Unregistered users: " << unregistered << std::endl;
+    std::cout << "========================================" << std::endl;
+}
+
+void UserManager::checkAndPrintStats() {
+    if (!_periodicStatsEnabled) return;
+    
+    time_t currentTime = time(NULL);
+    // Print stats every 30 seconds
+    if (currentTime - _lastStatsTime >= 30) {
+        printMemoryStats();
+        _lastStatsTime = currentTime;
+    }
 }

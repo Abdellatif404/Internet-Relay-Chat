@@ -5,7 +5,10 @@ User::User(int fd) : _fd(fd), _hostname("localhost"), _state(UNREGISTERED),
                      _authenticated(false), _lastPing(time(NULL)), 
                      _connectionTime(time(NULL)), _isOperator(false), _isAway(false) {}
 
-User::~User() {}
+User::~User() {
+    // Explicit cleanup - though strings and primitives clean up automatically,
+    // this makes the destructor clear and allows for future expansion
+}
 
 // Getters
 int User::getFd() const { return _fd; }

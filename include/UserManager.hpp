@@ -14,6 +14,10 @@ private:
     std::string _serverVersion;
     int _maxUsers;
     std::vector<std::string> _operators;   // Server operators list
+    
+    // Debug tracking
+    bool _periodicStatsEnabled;
+    time_t _lastStatsTime;
 
 public:
     UserManager(const std::string& password, SendQueue* sendQueue, const std::string& serverName);
@@ -25,6 +29,9 @@ public:
     void removeUser(int fd);
     User* getUser(int fd);
     User* getUserByNickname(const std::string& nickname);
+
+    // Connection cleanup
+    void handleDisconnection(int fd); // Helper for proper cleanup on disconnection
 
     // Authentication
     bool authenticateUser(User* user, const std::string& password);
@@ -50,6 +57,10 @@ public:
     // User queries
     std::vector<User*> getAllUsers() const;
     size_t getUserCount() const;
+    
+    // Debug and monitoring
+    void enablePeriodicStats(bool enable) { _periodicStatsEnabled = enable; }
+    void checkAndPrintStats();
 
     // Utility
     std::string toLowerCase(const std::string& str) const;
@@ -66,6 +77,9 @@ public:
     const std::string& getServerVersion() const { return _serverVersion; }
     int getMaxUsers() const { return _maxUsers; }
     void setMaxUsers(int max) { _maxUsers = max; }
+    
+    // Memory debugging
+    void printMemoryStats() const;
 };
 
 #endif
