@@ -7,11 +7,12 @@
 class User;
 class UserManager;
 
-class QuitCommand {
-public:
-    static bool execute(User* user, const std::vector<std::string>& params, UserManager* userManager);
-private:
-    static std::string parseQuitMessage(const std::vector<std::string>& params);
+class QuitCommand
+{
+	public:
+		static bool execute(User* user, const std::vector<std::string>& params, UserManager* userManager);
+	private:
+		static std::string parseQuitMessage(const std::vector<std::string>& params);
 };
 
 #endif

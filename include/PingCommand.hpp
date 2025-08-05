@@ -6,14 +6,15 @@
 class User;
 class UserManager;
 
-class PingCommand {
-public:
-    static bool execute(User* user, const std::vector<std::string>& params, UserManager* userManager);
-};
+class PingCommand
+{
+	public:
+		static bool execute(User* user, const std::vector<std::string>& params, UserManager* userManager);
+	};
 
-class PongCommand {
-public:
-    static bool execute(User* user, const std::vector<std::string>& params, UserManager* userManager);
+	class PongCommand {
+	public:
+		static bool execute(User* user, const std::vector<std::string>& params, UserManager* userManager);
 };
 
 #endif

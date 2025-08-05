@@ -10,61 +10,50 @@ enum UserState {
     REGISTERED
 };
 
-class User {
-private:
-    int _fd;
-    std::string _nickname;
-    std::string _username;
-    std::string _realname;
-    std::string _hostname;
-    UserState _state;
-    bool _authenticated;
-    time_t _lastPing;
-    time_t _connectionTime;
-    bool _isOperator;
-    std::string _awayMessage;
-    bool _isAway;
+class User
+{
+	private:
+		int _fd;
+		std::string _nickname, _username, _realname, _hostname, _awayMessage;
+		UserState _state;
+		time_t _lastPing, _connectionTime;
+		bool _authenticated, _isOperator, _isAway;
 
-public:
-    User(int fd);
-    ~User();
-
-    // Getters
-    int getFd() const;
-    const std::string& getNickname() const;
-    const std::string& getUsername() const;
-    const std::string& getRealname() const;
-    const std::string& getHostname() const;
-    UserState getState() const;
-    bool isAuthenticated() const;
-    bool isRegistered() const;
-    time_t getLastPing() const;
-    time_t getConnectionTime() const;
-    bool isOperator() const;
-    const std::string& getAwayMessage() const;
-    bool isAway() const;
-
-    // Setters
-    void setNickname(const std::string& nickname);
-    void setUsername(const std::string& username);
-    void setRealname(const std::string& realname);
-    void setHostname(const std::string& hostname);
-    void setState(UserState state);
-    void setAuthenticated(bool auth);
-    void setLastPing(time_t ping);
-    void setOperator(bool op);
-    void setAway(bool away, const std::string& message = "");
-
-    // User prefix for messages (nick!user@host)
-    std::string getPrefix() const;
-    
-    // Validation methods
-    static bool isValidNickname(const std::string& nick);
-    static bool isValidUsername(const std::string& username);
-    
-    // Utility
-    void updateLastPing();
-    bool needsPing() const;
+	public:
+		User(int fd);
+		~User() {}
+		
+		// Getters
+		int getFd() const { return _fd; }
+		const std::string& getNickname() const { return _nickname; }
+		const std::string& getUsername() const { return _username; }
+		const std::string& getRealname() const { return _realname; }
+		const std::string& getHostname() const { return _hostname; }
+		UserState getState() const { return _state; }
+		bool isAuthenticated() const { return _authenticated; }
+		bool isRegistered() const { return _state == REGISTERED; }
+		time_t getLastPing() const { return _lastPing; }
+		time_t getConnectionTime() const { return _connectionTime; }
+		bool isOperator() const { return _isOperator; }
+		const std::string& getAwayMessage() const { return _awayMessage; }
+		bool isAway() const { return _isAway; }
+		
+		// Setters
+		void setNickname(const std::string& nickname) { _nickname = nickname; }
+		void setUsername(const std::string& username) { _username = username; }
+		void setRealname(const std::string& realname) { _realname = realname; }
+		void setHostname(const std::string& hostname) { _hostname = hostname; }
+		void setState(UserState state) { _state = state; }
+		void setAuthenticated(bool auth) { _authenticated = auth; }
+		void setOperator(bool op) { _isOperator = op; }
+		void setAway(bool away, const std::string& message = "");
+		
+		// Utility functions
+		std::string getPrefix() const;
+		static bool isValidNickname(const std::string& nick);
+		static bool isValidUsername(const std::string& username);
+		void updateLastPing() { _lastPing = time(NULL); }
+		bool needsPing() const { return (time(NULL) - _lastPing) > 60; }
 };
 
 #endif
