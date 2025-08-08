@@ -8,6 +8,8 @@
 #include "ChannelManager.hpp"
 #include "MessageParser.hpp"
 
+class BotManager;
+
 class	EventLoop
 {
 	private:
@@ -17,6 +19,7 @@ class	EventLoop
 		ConnectionManager				*_connManager;
 		UserManager						*_userManager;
 		ChannelManager					*_chanManager;
+		BotManager						*_botManager;
 		MessageBuffer					*_msgBuffer;
 		SendQueue						*_sendQueue;
 

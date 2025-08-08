@@ -13,6 +13,9 @@ SRCS = src/main.cpp src/EventLoop.cpp \
 		src/commands/user/PingCommand.cpp \
 		src/commands/user/PrivMsgCommand.cpp \
 		src/commands/user/QuitCommand.cpp \
+		src/commands/user/BotCommand.cpp \
+		src/bot/IRCBot.cpp \
+		src/bot/BotManager.cpp \
 		src/message/MessageParser.cpp \
 
 OBJ_DIR = obj

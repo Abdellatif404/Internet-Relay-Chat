@@ -7,9 +7,10 @@
 #include "PrivMsgCommand.hpp"
 #include "QuitCommand.hpp"
 #include "PingCommand.hpp"
+#include "BotCommand.hpp"
+#include "BotManager.hpp"
 
-EventLoop::EventLoop(int serverFd, const std::string& password)
-	: _srvFd(serverFd), _epFd(-1)
+EventLoop::EventLoop(int serverFd, const std::string& password) : _srvFd(serverFd), _epFd(-1)
 {
 	_epFd = epoll_create1(0);
 	_protect(_epFd, "Failed to create epoll instance");
@@ -19,6 +20,7 @@ EventLoop::EventLoop(int serverFd, const std::string& password)
 	_connManager = new ConnectionManager();
 	_userManager = new UserManager(password, _sendQueue);
 	_chanManager = new ChannelManager(_sendQueue);
+	_botManager = new BotManager(_userManager, _chanManager);
 
 	_events.resize(1024);
 	for (size_t i = 0; i < _events.size(); ++i)
@@ -32,6 +34,7 @@ EventLoop::~EventLoop()
 	delete _connManager;
 	delete _userManager;
 	delete _chanManager;
+	delete _botManager;
 	delete _msgBuffer;
 	delete _sendQueue;
 }
@@ -158,10 +161,12 @@ void EventLoop::_processUserMessages(int fd) {
 			QuitCommand::execute(user, ircMsg.params, _userManager);
 		else if (ircMsg.command == "PING")
 			PingCommand::execute(user, ircMsg.params, _userManager);
+		else if (ircMsg.command == "BOT")
+			BotCommand::execute(user, ircMsg.params, _botManager);
 		else
-    {
+    	{
 			if (user->isRegistered())
-      {
+      		{
 				std::string error = ":localhost 421 " + user->getNickname() + " " + ircMsg.command + " :Unknown command\r\n";
 				_userManager->sendMessage(user, error);
 			}
