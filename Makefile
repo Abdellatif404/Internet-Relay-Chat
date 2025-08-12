@@ -3,7 +3,7 @@ CXX = c++
 CXXFLAGS = -Wall -Wextra -Werror -std=c++98 -Wshadow -Wno-shadow -I./include
 SRCS = src/main.cpp src/EventLoop.cpp \
 		src/network/MessageBuffer.cpp src/network/SendQueue.cpp \
-		src/network/Server.cpp src/network/SocketHandler.cpp \
+		src/network/Server.cpp src/network/SocketHandler.cpp src/network/EventHandler.cpp \
 		src/network/ConnectionManager.cpp src/network/Connection.cpp \
 		src/channel/Channel.cpp src/channel/ChannelManager.cpp \
 		src/user/User.cpp src/user/UserManager.cpp \
