@@ -50,6 +50,15 @@ typedef struct sockaddr soaddr_t;
 #define RPL_UNAWAY          "305"
 #define RPL_NOWAWAY         "306"
 
+// Channel responses
+#define RPL_NOTOPIC         "331"
+#define RPL_TOPIC           "332"
+#define RPL_TOPICWHOTIME    "333"
+#define RPL_INVITING        "341"
+#define RPL_NAMREPLY        "353"
+#define RPL_ENDOFNAMES      "366"
+#define RPL_CHANNELMODEIS   "324"
+
 // Error codes
 #define ERR_NOSUCHNICK      "401"
 #define ERR_NOSUCHCHANNEL   "403"
@@ -63,6 +72,7 @@ typedef struct sockaddr soaddr_t;
 #define ERR_NICKCOLLISION   "436"
 #define ERR_NOTONCHANNEL    "442"
 #define ERR_USERONCHANNEL   "443"
+#define ERR_USERNOTINCHANNEL "441"
 #define ERR_NOTREGISTERED   "451"
 #define ERR_NEEDMOREPARAMS  "461"
 #define ERR_ALREADYREGISTRED "462"

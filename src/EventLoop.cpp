@@ -7,6 +7,12 @@
 #include "PrivMsgCommand.hpp"
 #include "QuitCommand.hpp"
 #include "PingCommand.hpp"
+#include "JoinCommand.hpp"
+#include "PartCommand.hpp"
+#include "TopicCommand.hpp"
+#include "ModeCommand.hpp"
+#include "KickCommand.hpp"
+#include "InviteCommand.hpp"
 
 EventLoop::EventLoop(int serverFd, const std::string& password)
 	: _srvFd(serverFd), _epFd(-1)
@@ -158,6 +164,30 @@ void EventLoop::_processUserMessages(int fd) {
 			QuitCommand::execute(user, ircMsg.params, _userManager);
 		else if (ircMsg.command == "PING")
 			PingCommand::execute(user, ircMsg.params, _userManager);
+		else if (ircMsg.command == "JOIN") {
+			JoinCommand joinCmd(_chanManager, _sendQueue);
+			joinCmd.execute(user, ircMsg.params);
+		}
+		else if (ircMsg.command == "PART") {
+			PartCommand partCmd(_chanManager, _sendQueue);
+			partCmd.execute(user, ircMsg.params);
+		}
+		else if (ircMsg.command == "TOPIC") {
+			TopicCommand topicCmd(_chanManager, _sendQueue);
+			topicCmd.execute(user, ircMsg.params);
+		}
+		else if (ircMsg.command == "MODE") {
+			ModeCommand modeCmd(_chanManager, _userManager, _sendQueue);
+			modeCmd.execute(user, ircMsg.params);
+		}
+		else if (ircMsg.command == "KICK") {
+			KickCommand kickCmd(_chanManager, _userManager, _sendQueue);
+			kickCmd.execute(user, ircMsg.params);
+		}
+		else if (ircMsg.command == "INVITE") {
+			InviteCommand inviteCmd(_chanManager, _userManager, _sendQueue);
+			inviteCmd.execute(user, ircMsg.params);
+		}
 		else
     {
 			if (user->isRegistered())
