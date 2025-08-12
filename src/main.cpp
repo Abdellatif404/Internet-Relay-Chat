@@ -9,7 +9,7 @@ void	signalHandler(int signal)
 	(void)signal;
 	if (g_server)
 	{
-		std::cout << "\n" << RED << "Server shutting down..." << RESET << std::endl;
+		std::cout << RED << "Server shutting down..." << RESET << std::endl;
 		delete g_server;
 		g_server = NULL;
 	}
@@ -47,6 +47,16 @@ int	validate_port(char *str)
 	return port;
 }
 
+std::string validate_password(const char *arg)
+{
+	std::string password(arg);
+	if (password.empty() || password.find(' ') != std::string::npos)
+		throw std::invalid_argument("Password cannot be empty or contain spaces!");
+	if (password.length() > 64)
+		throw std::length_error("Password too long! Maximum length is 64 characters.");
+	return password;
+}
+
 int	main(int ac, char **av)
 {
 	if (ac != 3)
@@ -60,7 +70,7 @@ int	main(int ac, char **av)
 	try
 	{
 		uint16_t	port = validate_port(av[1]);
-		std::string password = av[2];
+		std::string	password = validate_password(av[2]);
 
 		g_server = new Server(port, password);
 		g_server->start();

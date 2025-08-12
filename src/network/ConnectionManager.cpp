@@ -22,6 +22,11 @@ Connection *ConnectionManager::getConnection(int fd)
 	return NULL;
 }
 
+ConnectionMap &ConnectionManager::getConnections()
+{
+	return _connections;
+}
+
 int	ConnectionManager::createConnection(int fd)
 {
 	struct sockaddr_in	clientAddr;
