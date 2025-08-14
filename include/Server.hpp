@@ -16,7 +16,7 @@ class	Server
 		time_t		_startTime;
 		EventLoop	*_eventLoop;
 	public:
-		Server(uint16_t port, const std::string& password);
+		Server(uint16_t port, strRef password);
 		~Server();
 
 		void	start();

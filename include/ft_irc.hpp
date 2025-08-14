@@ -35,6 +35,9 @@
 #include <netinet/in.h>
 
 typedef struct sockaddr soaddr_t;
+typedef const std::string& strRef;
+typedef struct epoll_event event_t;
+typedef std::vector<event_t> eventVec;
 
 // IRC Response Codes (RFC 2812)
 // Welcome messages

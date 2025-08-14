@@ -1,7 +1,7 @@
 
 #include "SocketHandler.hpp"
 
-void SocketHandler::_protect(int status, const std::string& errorMsg)
+void SocketHandler::_protect(int status, strRef errorMsg)
 {
 	if (status < 0)
 		throw std::runtime_error(errorMsg);
@@ -59,7 +59,7 @@ int SocketHandler::acceptConnection(int fd, soaddr_t *addr)
 
 void SocketHandler::addSocket(int epFd, int fd)
 {
-	struct epoll_event event;
+	event_t	event;
 	std::memset(&event, 0, sizeof(event));
 	event.events = EPOLLIN | EPOLLRDHUP | EPOLLHUP | EPOLLERR;
 	event.data.fd = fd;
@@ -70,7 +70,7 @@ void SocketHandler::addSocket(int epFd, int fd)
 
 void SocketHandler::modifySocket(int epFd, int fd, uint32_t events)
 {
-	struct epoll_event event;
+	event_t	event;
 	std::memset(&event, 0, sizeof(event));
 	event.events = events | EPOLLRDHUP | EPOLLHUP | EPOLLERR;
 	event.data.fd = fd;

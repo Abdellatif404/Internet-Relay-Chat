@@ -11,7 +11,7 @@ SendQueue::~SendQueue()
 {
 };
 
-void SendQueue::enqueueMessage(int clientFd, const std::string &message)
+void SendQueue::enqueueMessage(int clientFd, strRef message)
 {
 	_clientQueues[clientFd].push(message);
 	SocketHandler::modifySocket(_epollFd, clientFd, EPOLLIN | EPOLLOUT);

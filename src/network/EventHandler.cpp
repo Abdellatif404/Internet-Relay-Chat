@@ -15,7 +15,7 @@
 #include "InviteCommand.hpp"
 #include "MessageParser.hpp"
 
-void EventHandler::_protect(int status, const std::string& errorMsg)
+void EventHandler::_protect(int status, strRef errorMsg)
 {
 	if (status < 0)
 		throw std::runtime_error(errorMsg);
@@ -79,7 +79,7 @@ void EventHandler::_processMessage(ChannelManager *chanManager, UserManager *use
 	}
 }
 
-int EventHandler::initEpoll(std::vector<struct epoll_event> &events)
+int EventHandler::initEpoll(eventVec &events)
 {
 	int fd = epoll_create1(0);
 	_protect(fd, "Failed to create epoll instance");
@@ -89,7 +89,7 @@ int EventHandler::initEpoll(std::vector<struct epoll_event> &events)
 	return fd;
 }
 
-int EventHandler::waitForEvents(int epollFd, std::vector<struct epoll_event> &events)
+int EventHandler::waitForEvents(int epollFd, eventVec &events)
 {
 	int eventCount = epoll_wait(epollFd, events.data(), events.size(), -1);
 	_protect(eventCount, "Failed to wait for epoll events");
@@ -104,7 +104,7 @@ void EventHandler::newConnection(ConnectionManager *connManager, int serverFd, i
 	SocketHandler::addSocket(epollFd, fd);
 }
 
-void EventHandler::clientDisconnection(ConnectionManager *connManager, UserManager *userManager, int epollFd, int eventFd, struct epoll_event &event)
+void EventHandler::clientDisconnection(ConnectionManager *connManager, UserManager *userManager, int epollFd, int eventFd, event_t &event)
 {
 	connManager->removeConnection(eventFd);
 	userManager->removeUser(eventFd);

@@ -2,7 +2,7 @@
 #include "Server.hpp"
 #include "SocketHandler.hpp"
 
-Server::Server(uint16_t port, const std::string& password)
+Server::Server(uint16_t port, strRef password)
 	:	_serverFd(-1), _serverName("ircserv"),
 		_serverVersion("1.0"), _port(port),
 		_password(password), _eventLoop(NULL)

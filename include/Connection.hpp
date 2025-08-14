@@ -13,11 +13,11 @@ class	Connection
 		std::string			_address;
 		uint16_t			_port;
 	public:
-		Connection(int fd, const std::string& address, uint16_t port);
+		Connection(int fd, strRef address, uint16_t port);
 		~Connection();
 
 		int					getFd() const;
-		const std::string&	getAddress() const;
+		strRef				getAddress() const;
 		uint16_t			getPort() const;
 
 		void				receiveData(MessageBuffer *messageBuffer);
