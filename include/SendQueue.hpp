@@ -18,7 +18,7 @@ class	SendQueue
 		SendQueue(int epollFd);
 		~SendQueue();
 
-		void		enqueueMessage(int clientFd, const std::string &message);
+		void		enqueueMessage(int clientFd, strRef message);
 		bool		hasQueuedMessages(int clientFd) const;
 		std::string	dequeueMessage(int clientFd);
 };

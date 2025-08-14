@@ -7,7 +7,7 @@
 class SocketHandler
 {
 	private:
-		static void			_protect(int status, const std::string& errorMsg);
+		static void			_protect(int status, strRef errorMsg);
 
 	public:
 		static int			createSocket();

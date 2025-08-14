@@ -7,14 +7,12 @@
 #include "UserManager.hpp"
 #include "ChannelManager.hpp"
 
-typedef const std::string& strRef;
-
 class	EventLoop
 {
 	private:
 		int _srvFd;
 		int _epFd;
-		std::vector<struct epoll_event>	_events;
+		eventVec						_events;
 		ConnectionManager				*_connManager;
 		UserManager						*_userManager;
 		ChannelManager					*_chanManager;

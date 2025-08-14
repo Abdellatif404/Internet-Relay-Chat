@@ -2,7 +2,7 @@
 #include "Connection.hpp"
 #include "EventLoop.hpp"
 
-Connection::Connection(int fd, const std::string& address, uint16_t port)
+Connection::Connection(int fd, strRef address, uint16_t port)
 	: _fd(fd), _address(address), _port(port)
 {
 }
@@ -16,7 +16,7 @@ int Connection::getFd() const
 	return _fd;
 }
 
-const std::string& Connection::getAddress() const
+strRef Connection::getAddress() const
 {
 	return _address;
 }
