@@ -22,11 +22,11 @@ bool UserCommand::execute(User* user, const std::vector<std::string>& params, Us
     }
     
     std::string username = params[0];
-    // params[1] is mode (ignored for now)
-    // params[2] is unused (should be *)
+    
+    
     std::string realname = parseRealname(params, 3);
     
-    // Validate username format (RFC 2812)
+    
     if (!User::isValidUsername(username)) {
         std::string nick = user->getNickname().empty() ? "*" : user->getNickname();
         std::string error = ":localhost " + std::string(ERR_ERRONEUSNICKNAME) + " " + nick + " :Invalid username\r\n";
@@ -37,11 +37,7 @@ bool UserCommand::execute(User* user, const std::vector<std::string>& params, Us
     user->setUsername(username);
     user->setRealname(realname);
     
-    std::cout << "User info set for fd " << user->getFd() << ": " << username << " (" << realname << ")" << std::endl;
-    
-    // Try to complete registration
     if (userManager->tryCompleteRegistration(user)) {
-        std::cout << "User " << user->getNickname() << " registration completed!" << std::endl;
     }
     
     return true;
@@ -54,12 +50,12 @@ std::string UserCommand::parseRealname(const std::vector<std::string>& params, s
     
     std::string realname = params[startIndex];
     
-    // Remove leading ':' if present
+    
     if (!realname.empty() && realname[0] == ':') {
         realname = realname.substr(1);
     }
     
-    // If there are more parameters after the realname, join them with spaces
+    
     for (size_t i = startIndex + 1; i < params.size(); i++) {
         realname += " " + params[i];
     }

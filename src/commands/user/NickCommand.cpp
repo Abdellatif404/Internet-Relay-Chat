@@ -16,7 +16,7 @@ bool NickCommand::execute(User* user, const std::vector<std::string>& params, Us
     
     std::string nickname = params[0];
     
-    // Validate nickname format (RFC 2812 + Modern IRC)
+    
     if (!User::isValidNickname(nickname)) {
         std::string nick = user->getNickname().empty() ? "*" : user->getNickname();
         std::string error = ":localhost " + std::string(ERR_ERRONEUSNICKNAME) + " " + nick + " " + nickname + " :Erroneous nickname\r\n";
@@ -24,18 +24,24 @@ bool NickCommand::execute(User* user, const std::vector<std::string>& params, Us
         return false;
     }
     
-    if (!userManager->registerNickname(user, nickname)) {
-        std::string nick = user->getNickname().empty() ? "*" : user->getNickname();
-        std::string error = ":localhost " + std::string(ERR_NICKNAMEINUSE) + " " + nick + " " + nickname + " :Nickname is already in use\r\n";
-        userManager->sendMessage(user, error);
-        return false;
-    }
     
-    std::cout << "Nickname set to: " << nickname << " for fd " << user->getFd() << std::endl;
-    
-    // Try to complete registration if possible
-    if (userManager->tryCompleteRegistration(user)) {
-        std::cout << "User " << user->getNickname() << " registration completed!" << std::endl;
+    if (user->isRegistered()) {
+        if (!userManager->changeNickname(user, nickname)) {
+            std::string error = ":localhost " + std::string(ERR_NICKNAMEINUSE) + " " + user->getNickname() + " " + nickname + " :Nickname is already in use\r\n";
+            userManager->sendMessage(user, error);
+            return false;
+        }
+    } else {
+        
+        if (!userManager->registerNickname(user, nickname)) {
+            std::string nick = user->getNickname().empty() ? "*" : user->getNickname();
+            std::string error = ":localhost " + std::string(ERR_NICKNAMEINUSE) + " " + nick + " " + nickname + " :Nickname is already in use\r\n";
+            userManager->sendMessage(user, error);
+            return false;
+        }
+        
+        if (userManager->tryCompleteRegistration(user)) {
+        }
     }
     
     return true;

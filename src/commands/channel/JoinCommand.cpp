@@ -27,7 +27,7 @@ void JoinCommand::execute(User* user, const std::vector<std::string>& params) {
     std::string channels = params[0];
     std::string keys = params.size() > 1 ? params[1] : "";
 
-    // Parse comma-separated channels and keys
+    
     std::vector<std::string> channelList;
     std::vector<std::string> keyList;
 
@@ -47,7 +47,7 @@ void JoinCommand::execute(User* user, const std::vector<std::string>& params) {
         }
     }
 
-    // Process each channel
+    
     for (size_t i = 0; i < channelList.size(); ++i) {
         std::string channelName = channelList[i];
         std::string key = i < keyList.size() ? keyList[i] : "";
@@ -60,17 +60,17 @@ void JoinCommand::execute(User* user, const std::vector<std::string>& params) {
 
         Channel* channel = _channelManager->getChannel(channelName);
         
-        // Check if user is already on the channel
+        
         if (channel && channel->isMember(user)) {
             continue;
         }
 
-        // Create channel if it doesn't exist
+        
         if (!channel) {
             channel = _channelManager->createChannel(channelName);
         }
 
-        // Check if user can join
+        
         if (!channel->canJoin(user, key)) {
             if (channel->isInviteOnly() && !channel->isInvited(user)) {
                 std::string errorMsg = ":server " ERR_INVITEONLYCHAN " " + user->getNickname() + " " + channelName + " :Cannot join channel (+i)\r\n";
@@ -85,13 +85,13 @@ void JoinCommand::execute(User* user, const std::vector<std::string>& params) {
             continue;
         }
 
-        // Add user to channel
+        
         channel->addUser(user);
 
-        // Send JOIN message to all channel members including the user
+        
         sendJoinMessages(user, channelName);
 
-        // Send NAMES reply
+        
         sendNamesReply(user, channelName);
     }
 }
@@ -105,11 +105,11 @@ void JoinCommand::sendJoinMessages(User* user, const std::string& channelName) {
     
     Channel* channel = _channelManager->getChannel(channelName);
     if (channel) {
-        // Send to all members including the user who joined
+        
         channel->broadcastMessage(joinMsg, NULL);
         _sendQueue->enqueueMessage(user->getFd(), joinMsg);
 
-        // Send topic if it exists
+        
         if (!channel->getTopic().empty()) {
             std::string topicMsg = ":server " RPL_TOPIC " " + user->getNickname() + " " + channelName + " :" + channel->getTopic() + "\r\n";
             _sendQueue->enqueueMessage(user->getFd(), topicMsg);

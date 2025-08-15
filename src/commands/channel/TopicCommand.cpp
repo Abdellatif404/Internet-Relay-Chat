@@ -39,7 +39,7 @@ void TopicCommand::execute(User* user, const std::vector<std::string>& params) {
         return;
     }
 
-    // If no topic parameter is given, send current topic
+    
     if (params.size() == 1) {
         if (channel->getTopic().empty()) {
             sendNoTopicReply(user, channelName);
@@ -56,20 +56,20 @@ void TopicCommand::execute(User* user, const std::vector<std::string>& params) {
         return;
     }
 
-    // Setting topic
+    
     std::string newTopic = params[1];
 
-    // Check if topic is restricted and user is not an operator
+    
     if (channel->isTopicRestricted() && !channel->isOperator(user)) {
         std::string errorMsg = ":server " ERR_CHANOPRIVSNEEDED " " + user->getNickname() + " " + channelName + " :You're not channel operator\r\n";
         _sendQueue->enqueueMessage(user->getFd(), errorMsg);
         return;
     }
 
-    // Set the topic
+    
     channel->setTopic(newTopic, user);
 
-    // Broadcast topic change to all channel members
+    
     broadcastTopicChange(user, channelName, newTopic);
 }
 
@@ -88,7 +88,7 @@ void TopicCommand::broadcastTopicChange(User* user, const std::string& channelNa
     
     Channel* channel = _channelManager->getChannel(channelName);
     if (channel) {
-        // Send to all members including the user who changed the topic
+        
         channel->broadcastMessage(topicMsg, NULL);
         _sendQueue->enqueueMessage(user->getFd(), topicMsg);
     }

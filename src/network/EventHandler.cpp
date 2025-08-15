@@ -2,6 +2,7 @@
 #include "EventHandler.hpp"
 #include "SocketHandler.hpp"
 #include "PassCommand.hpp"
+#include "CapCommand.hpp"
 #include "NickCommand.hpp"
 #include "UserCommand.hpp"
 #include "PrivMsgCommand.hpp"
@@ -29,21 +30,39 @@ void EventHandler::_processMessage(ChannelManager *chanManager, UserManager *use
 		IRCMessage ircMsg = MessageParser::parse(message);
 		User* user = userManager->getUser(fd);
 		
-		if (!user)
+		if (!user) {
 			user = userManager->createUser(fd);
-
-		if (ircMsg.command == "PASS")
+			if (!user) {
+				continue;
+			}
+		}
+		
+		if (ircMsg.command == "PASS") {
 			PassCommand::execute(user, ircMsg.params, userManager);
-		else if (ircMsg.command == "NICK")
+		}
+		else if (ircMsg.command == "CAP") {
+			CapCommand::execute(user, ircMsg.params, userManager);
+		}
+		else if (ircMsg.command == "NICK") {
 			NickCommand::execute(user, ircMsg.params, userManager);
-		else if (ircMsg.command == "USER")
+		}
+		else if (ircMsg.command == "USER") {
 			UserCommand::execute(user, ircMsg.params, userManager);
-		else if (ircMsg.command == "PRIVMSG")
-			PrivMsgCommand::execute(user, ircMsg.params, userManager);
-		else if (ircMsg.command == "QUIT")
+		}
+		else if (ircMsg.command == "QUIT") {
 			QuitCommand::execute(user, ircMsg.params, userManager);
-		else if (ircMsg.command == "PING")
+		}
+		else if (!user->isRegistered()) {
+			std::string error = ":localhost " + std::string(ERR_NOTREGISTERED) + " * :You have not registered\r\n";
+			userManager->sendMessage(user, error);
+			continue;
+		}
+		else if (ircMsg.command == "PRIVMSG") {
+			PrivMsgCommand::execute(user, ircMsg.params, userManager, chanManager);
+		}
+		else if (ircMsg.command == "PING") {
 			PingCommand::execute(user, ircMsg.params, userManager);
+		}
 		else if (ircMsg.command == "JOIN") {
 			JoinCommand joinCmd(chanManager, sendQueue);
 			joinCmd.execute(user, ircMsg.params);
@@ -68,13 +87,9 @@ void EventHandler::_processMessage(ChannelManager *chanManager, UserManager *use
 			InviteCommand inviteCmd(chanManager, userManager, sendQueue);
 			inviteCmd.execute(user, ircMsg.params);
 		}
-		else
-		{
-			if (user->isRegistered())
-			{
-				std::string error = ":localhost 421 " + user->getNickname() + " " + ircMsg.command + " :Unknown command\r\n";
-				userManager->sendMessage(user, error);
-			}
+		else {
+			std::string error = ":localhost " + std::string(ERR_UNKNOWNCOMMAND) + " " + user->getNickname() + " " + ircMsg.command + " :Unknown command\r\n";
+			userManager->sendMessage(user, error);
 		}
 	}
 }
@@ -106,8 +121,8 @@ void EventHandler::newConnection(ConnectionManager *connManager, int serverFd, i
 
 void EventHandler::clientDisconnection(ConnectionManager *connManager, UserManager *userManager, int epollFd, int eventFd, event_t &event)
 {
+	userManager->handleDisconnection(eventFd);
 	connManager->removeConnection(eventFd);
-	userManager->removeUser(eventFd);
 	event.data.fd = -1;
 	event.events = 0;
 	SocketHandler::removeSocket(epollFd, eventFd);

@@ -9,7 +9,6 @@ void	signalHandler(int signal)
 	(void)signal;
 	if (g_server)
 	{
-		std::cout << RED << "Server shutting down..." << RESET << std::endl;
 		delete g_server;
 		g_server = NULL;
 	}
@@ -61,7 +60,6 @@ int	main(int ac, char **av)
 {
 	if (ac != 3)
 	{
-		std::cerr << RED << "Usage: " << av[0] << " <port> <password>" << RESET << std::endl;
 		return 1;
 	}
 	signal(SIGINT, signalHandler);
@@ -77,7 +75,6 @@ int	main(int ac, char **av)
 	}
 	catch (const std::exception &e)
 	{
-		std::cerr << RED << "Error: " << e.what() << RESET << std::endl;
 		delete g_server;
 		return 1;
 	}

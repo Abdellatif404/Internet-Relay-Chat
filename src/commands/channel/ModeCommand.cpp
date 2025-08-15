@@ -27,7 +27,7 @@ void ModeCommand::execute(User* user, const std::vector<std::string>& params) {
 
     std::string target = params[0];
 
-    // Check if target is a channel (starts with # or &)
+    
     if (target[0] == '#' || target[0] == '&') {
         handleChannelMode(user, target, params);
     } else {
@@ -51,7 +51,7 @@ void ModeCommand::handleChannelMode(User* user, const std::string& channelName,
         return;
     }
 
-    // If no modes specified, return current channel modes
+    
     if (modeParams.size() == 1) {
         std::string modeString = channel->getModeString();
         std::string modeArgs = "";
@@ -70,7 +70,7 @@ void ModeCommand::handleChannelMode(User* user, const std::string& channelName,
         return;
     }
 
-    // Check if user is operator for mode changes
+    
     if (!channel->isOperator(user)) {
         std::string errorMsg = ":server " ERR_CHANOPRIVSNEEDED " " + user->getNickname() + " " + channelName + " :You're not channel operator\r\n";
         _sendQueue->enqueueMessage(user->getFd(), errorMsg);
@@ -84,8 +84,8 @@ void ModeCommand::handleChannelMode(User* user, const std::string& channelName,
 }
 
 void ModeCommand::handleUserMode(User* user, const std::vector<std::string>& modeParams) {
-    (void)modeParams; // Suppress unused parameter warning
-    // For now, just return current user modes (empty)
+    (void)modeParams; 
+    
     std::string modeMsg = ":server " RPL_UMODEIS " " + user->getNickname() + " +\r\n";
     _sendQueue->enqueueMessage(user->getFd(), modeMsg);
 }
@@ -116,7 +116,7 @@ void ModeCommand::parseChannelModes(User* user, const std::string& channelName,
         try {
             applyMode(user, channelName, c, add, arg);
             
-            // Build mode string for broadcast
+            
             if (appliedModes.empty() || appliedModes[appliedModes.length() - 1] != (add ? '+' : '-')) {
                 appliedModes += (add ? '+' : '-');
             }
@@ -127,7 +127,7 @@ void ModeCommand::parseChannelModes(User* user, const std::string& channelName,
                 appliedArgs += arg;
             }
         } catch (const std::exception& e) {
-            // Mode application failed, continue with next mode
+            
             continue;
         }
     }
@@ -143,32 +143,32 @@ void ModeCommand::applyMode(User* user, const std::string& channelName,
     if (!channel) return;
 
     switch (mode) {
-        case 'i': // invite-only
+        case 'i': 
             channel->setInviteOnly(add);
             break;
-        case 't': // topic restricted
+        case 't': 
             channel->setTopicRestricted(add);
             break;
-        case 'm': // moderated
+        case 'm': 
             channel->setModerated(add);
             break;
-        case 'n': // no external messages
+        case 'n': 
             channel->setNoExternalMessages(add);
             break;
-        case 's': // secret
+        case 's': 
             channel->setSecret(add);
             break;
-        case 'p': // private
+        case 'p': 
             channel->setPrivate(add);
             break;
-        case 'k': // key
+        case 'k': 
             if (add && !arg.empty()) {
                 channel->setKey(arg);
             } else if (!add) {
                 channel->removeKey();
             }
             break;
-        case 'l': // user limit
+        case 'l': 
             if (add && !arg.empty()) {
                 int limit = std::atoi(arg.c_str());
                 if (limit > 0) {
@@ -178,7 +178,7 @@ void ModeCommand::applyMode(User* user, const std::string& channelName,
                 channel->removeUserLimit();
             }
             break;
-        case 'o': // operator
+        case 'o': 
             if (!arg.empty()) {
                 User* targetUser = _userManager->getUserByNickname(arg);
                 if (targetUser && channel->isMember(targetUser)) {
@@ -211,7 +211,7 @@ void ModeCommand::sendModeReply(User* user, const std::string& channelName,
 
     Channel* channel = _channelManager->getChannel(channelName);
     if (channel) {
-        // Send to all members including the user who changed the mode
+        
         channel->broadcastMessage(modeMsg, NULL);
         _sendQueue->enqueueMessage(user->getFd(), modeMsg);
     }

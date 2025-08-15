@@ -27,7 +27,7 @@ void PartCommand::execute(User* user, const std::vector<std::string>& params) {
     std::string channels = params[0];
     std::string reason = params.size() > 1 ? params[1] : "";
 
-    // Parse comma-separated channels
+    
     std::vector<std::string> channelList;
     std::stringstream channelStream(channels);
     std::string channel;
@@ -37,7 +37,7 @@ void PartCommand::execute(User* user, const std::vector<std::string>& params) {
         }
     }
 
-    // Process each channel
+    
     for (std::vector<std::string>::iterator it = channelList.begin(); it != channelList.end(); ++it) {
         std::string channelName = *it;
         Channel* channel = _channelManager->getChannel(channelName);
@@ -54,10 +54,10 @@ void PartCommand::execute(User* user, const std::vector<std::string>& params) {
             continue;
         }
 
-        // Send PART message to all channel members including the user
+        
         sendPartMessage(user, channelName, reason);
 
-        // Remove user from channel
+        
         _channelManager->removeUserFromChannel(user, channelName);
     }
 }
@@ -71,7 +71,7 @@ void PartCommand::sendPartMessage(User* user, const std::string& channelName, co
 
     Channel* channel = _channelManager->getChannel(channelName);
     if (channel) {
-        // Send to all members including the user who's leaving
+        
         channel->broadcastMessage(partMsg, NULL);
         _sendQueue->enqueueMessage(user->getFd(), partMsg);
     }

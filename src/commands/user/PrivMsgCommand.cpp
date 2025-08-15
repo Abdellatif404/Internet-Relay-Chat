@@ -1,6 +1,8 @@
 #include "PrivMsgCommand.hpp"
 #include "User.hpp"
 #include "UserManager.hpp"
+#include "ChannelManager.hpp"
+#include "Channel.hpp"
 #include <iostream>
 
 bool PrivMsgCommand::execute(User* user, const std::vector<std::string>& params, UserManager* userManager, ChannelManager* channelManager) {
@@ -23,15 +25,27 @@ bool PrivMsgCommand::execute(User* user, const std::vector<std::string>& params,
     }
     
     if (target[0] == '#' || target[0] == '&') {
-        // Channel message
+        
         if (channelManager) {
-            // Will be implemented when channel system is integrated
-            std::cout << "Channel message to " << target << ": " << message << std::endl;
+            Channel* channel = channelManager->getChannel(target);
+            if (!channel) {
+                userManager->sendError(user, 403, target + " :No such channel");
+                return false;
+            }
+            
+            if (!channel->isMember(user)) {
+                userManager->sendError(user, 404, target + " :Cannot send to channel");
+                return false;
+            }
+            
+            std::string privMsg = ":" + user->getPrefix() + " PRIVMSG " + target + " :" + message + "\r\n";
+            channel->broadcastMessage(privMsg, user);
         } else {
             userManager->sendError(user, 403, target + " :No such channel");
+            return false;
         }
     } else {
-        // Private message
+        
         userManager->sendPrivateMessage(user, target, message);
     }
     
@@ -45,12 +59,12 @@ std::string PrivMsgCommand::parseMessage(const std::vector<std::string>& params,
     
     std::string message = params[startIndex];
     
-    // Remove leading ':' if present
+    
     if (!message.empty() && message[0] == ':') {
         message = message.substr(1);
     }
     
-    // Join remaining parameters with spaces
+    
     for (size_t i = startIndex + 1; i < params.size(); i++) {
         message += " " + params[i];
     }

@@ -10,7 +10,7 @@ bool PingCommand::execute(User* user, const std::vector<std::string>& params, Us
     
     std::string server = params.empty() ? userManager->getServerName() : params[0];
     
-    // Send PONG response
+    
     std::string pongMsg = ":" + userManager->getServerName() + " PONG " + userManager->getServerName();
     if (!server.empty()) {
         pongMsg += " :" + server;
@@ -22,9 +22,6 @@ bool PingCommand::execute(User* user, const std::vector<std::string>& params, Us
 }
 
 bool PongCommand::execute(User* user, const std::vector<std::string>&, UserManager*) {
-    // Update user's last ping time to prevent timeout
     user->updateLastPing();
-    
-    std::cout << "Received PONG from " << user->getNickname() << std::endl;
     return true;
 }

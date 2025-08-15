@@ -1,4 +1,4 @@
-#include "CapCommand.hpp"
+ #include "CapCommand.hpp"
 #include <algorithm>
 
 bool CapCommand::execute(User* user, const std::vector<std::string>& params, UserManager* userManager) {
@@ -33,33 +33,33 @@ bool CapCommand::execute(User* user, const std::vector<std::string>& params, Use
 
 void CapCommand::handleLS(User* user, UserManager* userManager) {
     std::string nick = user->getNickname().empty() ? "*" : user->getNickname();
-    // For ft_irc project: minimal capability support for compatibility
+    
     std::string caps = ":localhost CAP " + nick + " LS :\r\n";
     userManager->sendMessage(user, caps);
 }
 
 void CapCommand::handleList(User* user, UserManager* userManager) {
     std::string nick = user->getNickname().empty() ? "*" : user->getNickname();
-    // Return empty list (no capabilities negotiated for basic ft_irc)
+    
     std::string caps = ":localhost CAP " + nick + " LIST :\r\n";
     userManager->sendMessage(user, caps);
 }
 
 void CapCommand::handleReq(User* user, const std::vector<std::string>& caps, UserManager* userManager) {
     std::string nick = user->getNickname().empty() ? "*" : user->getNickname();
-    // For ft_irc: reject all capability requests (basic server)
+    
     std::string capList;
     for (size_t i = 0; i < caps.size(); i++) {
         if (i > 0) capList += " ";
-        capList += caps[i]; // Don't prefix with - for NAK
+        capList += caps[i]; 
     }
     std::string response = ":localhost CAP " + nick + " NAK :" + capList + "\r\n";
     userManager->sendMessage(user, response);
 }
 
 void CapCommand::handleEnd(User* user, UserManager* userManager) {
-    // End capability negotiation - continue with registration if needed
-    // This is important for clients that use CAP negotiation
+    
+    
     if (!user->isRegistered() && !user->getNickname().empty() && !user->getUsername().empty()) {
         userManager->tryCompleteRegistration(user);
     }

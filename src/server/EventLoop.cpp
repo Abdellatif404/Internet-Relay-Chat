@@ -76,11 +76,16 @@ void EventLoop::run()
 
 void EventLoop::stop()
 {
+	if (!_connManager || !_sendQueue)
+		return;
+		
 	std::string message = "Warning: Server is shutting down...\r\n";
 	ConnectionMap _connections = _connManager->getConnections();
 	for (ConnectionMap::iterator it = _connections.begin(); it != _connections.end(); it++)
 	{
-		_sendQueue->enqueueMessage(it->second->getFd(), message);
-		it->second->sendData(_sendQueue);
+		if (it->second) {
+			_sendQueue->enqueueMessage(it->second->getFd(), message);
+			it->second->sendData(_sendQueue);
+		}
 	}
 }

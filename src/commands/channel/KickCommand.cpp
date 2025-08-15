@@ -49,7 +49,7 @@ void KickCommand::execute(User* user, const std::vector<std::string>& params) {
         return;
     }
 
-    // Find target user by nickname using UserManager
+    
     User* targetUser = _userManager->getUserByNickname(targetNick);
     
     if (!targetUser) {
@@ -64,7 +64,7 @@ void KickCommand::execute(User* user, const std::vector<std::string>& params) {
         return;
     }
 
-    // Broadcast kick message and remove user
+    
     broadcastKick(user, targetUser, channelName, reason);
     channel->kickUser(targetUser, user, reason);
 }
@@ -76,7 +76,7 @@ void KickCommand::broadcastKick(User* kicker, User* kicked,
     
     Channel* channel = _channelManager->getChannel(channelName);
     if (channel) {
-        // Send to all members including the kicked user
+        
         channel->broadcastMessage(kickMsg, NULL);
         _sendQueue->enqueueMessage(kicked->getFd(), kickMsg);
     }

@@ -29,7 +29,7 @@ public:
     User(int fd);
     ~User();
 
-    // Getters
+    
     int getFd() const;
     const std::string& getNickname() const;
     const std::string& getUsername() const;
@@ -44,7 +44,7 @@ public:
     const std::string& getAwayMessage() const;
     bool isAway() const;
 
-    // Setters
+    
     void setNickname(const std::string& nickname);
     void setUsername(const std::string& username);
     void setRealname(const std::string& realname);
@@ -55,14 +55,14 @@ public:
     void setOperator(bool op);
     void setAway(bool away, const std::string& message = "");
 
-    // User prefix for messages (nick!user@host)
+    
     std::string getPrefix() const;
     
-    // Validation methods
+    
     static bool isValidNickname(const std::string& nick);
     static bool isValidUsername(const std::string& username);
     
-    // Utility
+    
     void updateLastPing();
     bool needsPing() const;
 };
