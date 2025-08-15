@@ -16,7 +16,8 @@ bool QuitCommand::execute(User* user, const std::vector<std::string>& params, Us
     
     if (user->isRegistered()) {
         std::string quitMsg = ":" + user->getPrefix() + " QUIT :" + quitMessage + "\r\n";
-        
+        std::string goodbye = ":localhost NOTICE " + user->getNickname() + " :Goodbye!\r\n";
+        userManager->sendMessage(user, goodbye);
     }
     
     

@@ -24,6 +24,8 @@ bool PassCommand::execute(User* user, const std::vector<std::string>& params, Us
     
     std::string password = params[0];
     if (userManager->authenticateUser(user, password)) {
+        std::string success = ":localhost NOTICE * :Password accepted\r\n";
+        userManager->sendMessage(user, success);
         return true;
     } else {
         std::string error = ":localhost " + std::string(ERR_PASSWDMISMATCH) + " * :Password incorrect\r\n";

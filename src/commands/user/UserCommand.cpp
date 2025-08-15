@@ -37,6 +37,10 @@ bool UserCommand::execute(User* user, const std::vector<std::string>& params, Us
     user->setUsername(username);
     user->setRealname(realname);
     
+    std::string nick = user->getNickname().empty() ? "*" : user->getNickname();
+    std::string success = ":localhost NOTICE " + nick + " :User information set successfully\r\n";
+    userManager->sendMessage(user, success);
+    
     if (userManager->tryCompleteRegistration(user)) {
     }
     

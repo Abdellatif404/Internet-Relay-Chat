@@ -70,8 +70,12 @@ int	main(int ac, char **av)
 	try
 	{
 		uint16_t	port = validate_port(av[1]);
+		std::cout << GREEN << "✓ Port " << port << " validated successfully" << RESET << std::endl;
+		
 		std::string	password = validate_password(av[2]);
+		std::cout << GREEN << "✓ Password validated successfully" << RESET << std::endl;
 
+		std::cout << BLUE << "Starting IRC server on port " << port << "..." << RESET << std::endl;
 		g_server = new Server(port, password);
 		g_server->start();
 	}

@@ -40,6 +40,9 @@ bool NickCommand::execute(User* user, const std::vector<std::string>& params, Us
             return false;
         }
         
+        std::string success = ":localhost NOTICE " + nickname + " :Nickname set successfully\r\n";
+        userManager->sendMessage(user, success);
+        
         if (userManager->tryCompleteRegistration(user)) {
         }
     }
