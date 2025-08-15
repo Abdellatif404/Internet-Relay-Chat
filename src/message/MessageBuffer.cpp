@@ -27,6 +27,8 @@ std::string MessageBuffer::extractMessage(int fd)
 	{
 		std::string message(buffer.begin(), delimiterPos);
 		buffer.erase(buffer.begin(), delimiterPos + _delimiter.size());
+		if (message.size() > 512)
+			return "";
 		return message;
 	}
 	return "";

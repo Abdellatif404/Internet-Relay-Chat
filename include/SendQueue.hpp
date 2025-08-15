@@ -12,13 +12,13 @@ class	EventLoop;
 class	SendQueue
 {
 	private:
+		int				_epollFd;
 		ClientQueueMap	_clientQueues;
-		EventLoop		*_eventLoop;
 	public:
-		SendQueue(EventLoop *eventLoop);
+		SendQueue(int epollFd);
 		~SendQueue();
 
-		void		enqueueMessage(int clientFd, const std::string &message);
+		void		enqueueMessage(int clientFd, strRef message);
 		bool		hasQueuedMessages(int clientFd) const;
 		std::string	dequeueMessage(int clientFd);
 };

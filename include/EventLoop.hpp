@@ -6,34 +6,25 @@
 #include "ConnectionManager.hpp"
 #include "UserManager.hpp"
 #include "ChannelManager.hpp"
-#include "MessageParser.hpp"
-
-class BotManager;
 
 class	EventLoop
 {
 	private:
 		int _srvFd;
 		int _epFd;
-		std::vector<struct epoll_event>	_events;
+		eventVec						_events;
 		ConnectionManager				*_connManager;
 		UserManager						*_userManager;
 		ChannelManager					*_chanManager;
-		BotManager						*_botManager;
 		MessageBuffer					*_msgBuffer;
 		SendQueue						*_sendQueue;
-
-		void _protect(int status, const std::string& errorMsg);
-		void _processUserMessages(int fd);
 	public:
-		EventLoop(int serverFd, const std::string& password);
+		EventLoop(int serverFd, strRef pass, strRef srvName, strRef srvVersion, time_t startTime);
 		~EventLoop();
 
-		void addSocket(int fd);
-		void modifySocket(int fd, uint32_t events);
-		void removeSocket(int fd);
 		void handleEvents();
 		void run();
+		void stop();
 };
 
 #endif

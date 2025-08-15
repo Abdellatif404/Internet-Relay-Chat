@@ -16,7 +16,7 @@ class	ConnectionManager
 		~ConnectionManager();
 
 		Connection		*getConnection(int fd);
-
+		ConnectionMap	&getConnections();
 		int				createConnection(int fd);
 		void			removeConnection(int fd);
 };

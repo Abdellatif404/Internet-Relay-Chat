@@ -9,17 +9,18 @@ class	Server
 {
 	private:
 		int			_serverFd;
+		std::string	_serverName;
+		std::string	_serverVersion;
 		uint16_t	_port;
 		std::string	_password;
-
+		time_t		_startTime;
 		EventLoop	*_eventLoop;
-
-		void		_protect(int status, const std::string& errorMsg);
 	public:
-		Server(uint16_t port, const std::string& password);
+		Server(uint16_t port, strRef password);
 		~Server();
 
 		void	start();
+		void	shutdown();
 };
 
 #endif

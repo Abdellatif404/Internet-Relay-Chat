@@ -1,7 +1,7 @@
 
 #include "SocketHandler.hpp"
 
-void SocketHandler::_protect(int status, const std::string& errorMsg)
+void SocketHandler::_protect(int status, strRef errorMsg)
 {
 	if (status < 0)
 		throw std::runtime_error(errorMsg);
@@ -55,4 +55,32 @@ int SocketHandler::acceptConnection(int fd, soaddr_t *addr)
 		return -1;
 	}
 	return clientFd;
+}
+
+void SocketHandler::addSocket(int epFd, int fd)
+{
+	event_t	event;
+	std::memset(&event, 0, sizeof(event));
+	event.events = EPOLLIN | EPOLLRDHUP | EPOLLHUP | EPOLLERR;
+	event.data.fd = fd;
+
+	int exitCode = epoll_ctl(epFd, EPOLL_CTL_ADD, fd, &event);
+	_protect(exitCode, "Failed to add socket to epoll");
+}
+
+void SocketHandler::modifySocket(int epFd, int fd, uint32_t events)
+{
+	event_t	event;
+	std::memset(&event, 0, sizeof(event));
+	event.events = events | EPOLLRDHUP | EPOLLHUP | EPOLLERR;
+	event.data.fd = fd;
+
+	int exitCode = epoll_ctl(epFd, EPOLL_CTL_MOD, fd, &event);
+	_protect(exitCode, "Failed to modify socket in epoll");
+}
+
+void SocketHandler::removeSocket(int epFd, int fd)
+{
+	int exitCode = epoll_ctl(epFd, EPOLL_CTL_DEL, fd, NULL);
+	_protect(exitCode, "Failed to remove socket from epoll");
 }
