@@ -98,32 +98,34 @@ void IRCBot::processPrivateMessage(const std::string& sender, const std::string&
 
 void IRCBot::processChannelMessage(const std::string& sender, const std::string& channel, const std::string& message)
 {
+    (void)channel; // Suppress unused parameter warning
     std::string lowerMessage = message;
     std::transform(lowerMessage.begin(), lowerMessage.end(), lowerMessage.begin(), ::tolower);
     if (isCommand(message))
 	{
         std::string command = extractCommand(message);
         std::vector<std::string> params = extractParams(message);
+        // For channel commands, respond to the sender instead of the channel
         if (command == "help")
-            handleHelp(channel, params);
+            handleHelp(sender, params);
         else if (command == "time")
-            handleTime(channel);
+            handleTime(sender);
         else if (command == "ping")
-            handlePing(channel, params);
+            handlePing(sender, params);
         else if (command == "echo")
-            handleEcho(channel, params);
+            handleEcho(sender, params);
         else if (command == "version")
-            handleVersion(channel);
+            handleVersion(sender);
         else if (command == "uptime")
-            handleUptime(channel);
+            handleUptime(sender);
         else if (command == "userinfo")
-            handleUserInfo(channel, params);
+            handleUserInfo(sender, params);
         else if (command == "channelinfo")
-            handleChannelInfo(channel, params);
+            handleChannelInfo(sender, params);
         else if (command == "joke")
-            handleJoke(channel);
+            handleJoke(sender);
         else if (command == "quote")
-            handleQuote(channel);
+            handleQuote(sender);
     }
     else if (lowerMessage.find(getNickname()) != std::string::npos ||  lowerMessage.find("bot") != std::string::npos)
 	{
@@ -131,11 +133,11 @@ void IRCBot::processChannelMessage(const std::string& sender, const std::string&
 		{
             if (lowerMessage.find(it->first) != std::string::npos)
 			{
-                sendMessage(channel, sender + ": " + it->second);
+                sendMessage(sender, sender + ": " + it->second);
                 return;
             }
         }
-        sendMessage(channel, sender + ": Hello! Type !help to see what I can do.");
+        sendMessage(sender, sender + ": Hello! Type !help to see what I can do.");
     }
 }
 
@@ -295,22 +297,42 @@ void IRCBot::handleQuote(const std::string& target)
 
 void IRCBot::sendMessage(const std::string& target, const std::string& message)
 {
-    IRCMessage msg;
-    msg.prefix = getPrefix();
-    msg.command = "PRIVMSG";
-    msg.params.push_back(target);
-    msg.trailing = message;
-    std::cout << "Bot message: " << MessageParser::serialize(msg) << std::endl;
+    if (!_userManager)
+        return;
+        
+    User* targetUser = _userManager->getUserByNickname(target);
+    if (targetUser)
+    {
+        std::string response = ":" + getPrefix() + " PRIVMSG " + target + " :" + message + "\r\n";
+        _userManager->sendMessage(targetUser, response);
+        std::cout << "Bot message to " << target << ": " << message << std::endl;
+    }
+    else if (target[0] == '#')
+    {
+        std::cout << "Bot message to channel " << target << ": " << message << std::endl;
+    }
+    else
+    {
+        std::cout << "Bot: Target user " << target << " not found" << std::endl;
+    }
 }
 
 void IRCBot::sendNotice(const std::string& target, const std::string& message)
 {
-    IRCMessage msg;
-    msg.prefix = getPrefix();
-    msg.command = "NOTICE";
-    msg.params.push_back(target);
-    msg.trailing = message;
-    std::cout << "Bot notice: " << MessageParser::serialize(msg) << std::endl;
+    if (!_userManager)
+        return;
+        
+    User* targetUser = _userManager->getUserByNickname(target);
+    if (targetUser)
+    {
+        std::string response = ":" + getPrefix() + " NOTICE " + target + " :" + message + "\r\n";
+        _userManager->sendMessage(targetUser, response);
+        std::cout << "Bot notice to " << target << ": " << message << std::endl;
+    }
+    else
+    {
+        std::cout << "Bot: Target user " << target << " not found for notice" << std::endl;
+    }
 }
 
 bool IRCBot::isCommand(const std::string& message)

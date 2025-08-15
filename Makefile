@@ -20,9 +20,6 @@ SRCS = src/server/main.cpp src/server/EventLoop.cpp \
 		src/commands/channel/ModeCommand.cpp \
 		src/commands/channel/KickCommand.cpp \
 		src/commands/channel/InviteCommand.cpp \
-		src/commands/user/BotCommand.cpp \
-		src/bot/IRCBot.cpp \
-		src/bot/BotManager.cpp \
 		src/message/MessageParser.cpp \
 
 OBJ_DIR = obj
