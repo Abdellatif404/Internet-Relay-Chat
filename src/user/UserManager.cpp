@@ -94,10 +94,9 @@ bool UserManager::registerNickname(User* user, const std::string& nickname) {
     // Check if nickname is available (but allow user to re-register same nick)
     std::map<std::string, User*>::iterator it = _nicknames.find(lowerNick);
     if (it != _nicknames.end() && it->second != user) {
-        return false; // Nickname taken by another user
+        return false;
     }
     
-    // Remove old nickname if exists
     std::string oldNickname = user->getNickname();
     if (!oldNickname.empty()) {
         std::string oldLowerNick = toLowerCase(oldNickname);

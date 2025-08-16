@@ -1,9 +1,10 @@
 #include "PrivMsgCommand.hpp"
 #include "User.hpp"
 #include "UserManager.hpp"
+#include "BotManager.hpp"
 #include <iostream>
 
-bool PrivMsgCommand::execute(User* user, const std::vector<std::string>& params, UserManager* userManager, ChannelManager* channelManager) {
+bool PrivMsgCommand::execute(User* user, const std::vector<std::string>& params, UserManager* userManager, ChannelManager* channelManager, BotManager* botManager) {
     if (!user->isRegistered()) {
         userManager->sendError(user, 451, ":You have not registered");
         return false;
@@ -32,6 +33,17 @@ bool PrivMsgCommand::execute(User* user, const std::vector<std::string>& params,
         }
     } else {
         // Private message
+        // First check if target is a bot
+        if (botManager) {
+            IRCBot* bot = botManager->getBot(target);
+            if (bot) {
+                // Send message to bot for processing
+                botManager->processPrivateMessage(user->getNickname(), target, message);
+                return true;
+            }
+        }
+        
+        // If not a bot, send as regular private message
         userManager->sendPrivateMessage(user, target, message);
     }
     

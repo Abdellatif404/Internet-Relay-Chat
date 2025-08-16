@@ -2,6 +2,7 @@
 #include "EventLoop.hpp"
 #include "SocketHandler.hpp"
 #include "EventHandler.hpp"
+#include "BotManager.hpp"
 
 EventLoop::EventLoop(int serverFd, strRef pass, strRef srvName, strRef srvVersion, time_t startTime)
 	: _srvFd(serverFd), _epFd(-1)
@@ -16,6 +17,7 @@ EventLoop::EventLoop(int serverFd, strRef pass, strRef srvName, strRef srvVersio
 	_connManager = new ConnectionManager();
 	_userManager = new UserManager(pass, _sendQueue, srvName);
 	_chanManager = new ChannelManager(_sendQueue);
+	_botManager = new BotManager(_userManager, _chanManager);
 }
 
 EventLoop::~EventLoop()
@@ -23,6 +25,7 @@ EventLoop::~EventLoop()
 	delete _connManager;
 	delete _userManager;
 	delete _chanManager;
+	delete _botManager;
 	delete _msgBuffer;
 	delete _sendQueue;
 	if (_epFd >= 0)
@@ -58,7 +61,7 @@ void EventLoop::handleEvents()
 				if (!conn)
 					continue;
 				if (eventFlags & EPOLLIN)
-					EventHandler::recvFromClient(_chanManager, _userManager, conn, _msgBuffer, _sendQueue);
+					EventHandler::recvFromClient(_chanManager, _userManager, _botManager, conn, _msgBuffer, _sendQueue);
 				if (eventFlags & EPOLLOUT)
 					EventHandler::sendToClient(conn, _sendQueue, _epFd);
 			}
