@@ -4,18 +4,14 @@
 #include "EventHandler.hpp"
 #include "BotManager.hpp"
 
-EventLoop::EventLoop(int serverFd, strRef pass, strRef srvName, strRef srvVersion, time_t startTime)
-	: _srvFd(serverFd), _epFd(-1)
+EventLoop::EventLoop(int serverFd, strRef pass, strRef srvName, strRef srvVersion, time_t startTime): _srvFd(serverFd), _epFd(-1)
 {
-	(void)srvVersion;
 	(void)startTime;
-	
 	_epFd = EventHandler::initEpoll(_events);
-
 	_msgBuffer = new MessageBuffer();
 	_sendQueue = new SendQueue(_epFd);
 	_connManager = new ConnectionManager();
-	_userManager = new UserManager(pass, _sendQueue, srvName);
+	_userManager = new UserManager(pass, _sendQueue, srvName, srvVersion);
 	_chanManager = new ChannelManager(_sendQueue);
 	_botManager = new BotManager(_userManager, _chanManager);
 }
@@ -42,10 +38,8 @@ void EventLoop::handleEvents()
 		uint32_t	eventFlags = _events[i].events;
 
 		if (eventFd == _srvFd)
-		{
 			if (eventFlags & EPOLLIN)
 				EventHandler::newConnection(_connManager, _srvFd, _epFd);
-		}
 		else
 		{
 			if (eventFd < 0)

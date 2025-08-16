@@ -76,7 +76,7 @@ void EventHandler::_processMessage(ChannelManager *chanManager, UserManager *use
 		{
 			if (user->isRegistered())
 			{
-				std::string error = ":localhost 421 " + user->getNickname() + " " + ircMsg.command + " :Unknown command\r\n";
+				std::string error = ":" + userManager->getServerName() + " 421 " + user->getNickname() + " " + ircMsg.command + " :Unknown command\r\n";
 				userManager->sendMessage(user, error);
 			}
 		}

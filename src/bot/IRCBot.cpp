@@ -11,7 +11,7 @@ IRCBot::IRCBot(int fd, UserManager* userManager, ChannelManager* channelManager)
     setNickname("IRCBot");
     setUsername("ircbot");
     setRealname("IRC Bot Service");
-    setHostname("bot.irc.server");
+    setHostname(_userManager->getServerName());
     setState(REGISTERED);
     setAuthenticated(true);
     initializeResponses();
@@ -150,22 +150,16 @@ void IRCBot::handleHelp(const std::string& target, const std::vector<std::string
 	{
         sendMessage(target, "Available commands:");
         for (std::map<std::string, std::string>::const_iterator it = _helpCommands.begin(); it != _helpCommands.end(); ++it)
-		{
             sendMessage(target, "!" + it->first + " - " + it->second);
-        }
     }
 	else
 	{
         std::string command = params[0];
         std::map<std::string, std::string>::const_iterator it = _helpCommands.find(command);
         if (it != _helpCommands.end())
-		{
             sendMessage(target, "!" + command + " - " + it->second);
-        }
 		else
-		{
             sendMessage(target, "Unknown command: " + command);
-        }
     }
 }
 
@@ -180,9 +174,7 @@ void IRCBot::handleTime(const std::string& target)
 void IRCBot::handlePing(const std::string& target, const std::vector<std::string>& params)
 {
     if (params.empty())
-	{
         sendMessage(target, "Pong!");
-    }
 	else
 	{
         std::string message;
@@ -203,7 +195,6 @@ void IRCBot::handleEcho(const std::string& target, const std::vector<std::string
         sendMessage(target, "Usage: !echo <message>");
         return;
     }
-    
     std::string message;
     for (size_t i = 0; i < params.size(); ++i)
 	{
@@ -216,7 +207,8 @@ void IRCBot::handleEcho(const std::string& target, const std::vector<std::string
 
 void IRCBot::handleVersion(const std::string& target)
 {
-    sendMessage(target, "IRC Bot v1.0 - Built for ft_irc project");
+    std::string serverInfo = _userManager->getServerName() + " " + _userManager->getServerVersion();
+    sendMessage(target, "IRC Bot running on " + serverInfo + " - Built for ft_irc project");
 }
 
 void IRCBot::handleUptime(const std::string& target)
@@ -231,7 +223,6 @@ void IRCBot::handleUserInfo(const std::string& target, const std::vector<std::st
         sendMessage(target, "Usage: !userinfo <nickname>");
         return;
     }
-    
     if (_userManager)
 	{
         User* user = _userManager->getUserByNickname(params[0]);
@@ -239,78 +230,77 @@ void IRCBot::handleUserInfo(const std::string& target, const std::vector<std::st
             std::stringstream info;
             info << "User " << user->getNickname() << " (" << user->getUsername() << "@" << user->getHostname() << ")";
             if (user->isAway())
-			{
                 info << " - Away: " << user->getAwayMessage();
-            }
             if (user->isOperator())
-			{
                 info << " - IRC Operator";
-            }
             sendMessage(target, info.str());
         }
 		else
-		{
             sendMessage(target, "User " + params[0] + " not found.");
-        }
     }
 	else
-	{
         sendMessage(target, "User information not available (UserManager not initialized).");
-    }
 }
 
 void IRCBot::handleChannelInfo(const std::string& target, const std::vector<std::string>& params)
 {
     std::string channelName;
-    if (params.empty()) {
-        if (target.substr(0, 1) != "#") {
+    if (params.empty())
+	{
+        if (target.substr(0, 1) != "#")
+		{
             sendMessage(target, "This command can only be used in channels or specify a channel name.");
             return;
         }
         channelName = target;
-    } else {
+    }
+	else
+	{
         channelName = params[0];
-        if (channelName.substr(0, 1) != "#") {
+        if (channelName.substr(0, 1) != "#")
             channelName = "#" + channelName;
-        }
     }
     
-    if (_channelManager) {
+    if (_channelManager)
+	{
         Channel* channel = _channelManager->getChannel(channelName);
-        if (channel) {
+        if (channel)
+		{
             std::stringstream info;
             info << "Channel " << channelName << " - Topic: " << channel->getTopic();
             info << " - Users: " << channel->getMemberCount();
             std::string modeString = channel->getModeString();
-            if (!modeString.empty()) {
+            if (!modeString.empty())
                 info << " - Mode: " << modeString;
-            }
             sendMessage(target, info.str());
-        } else {
-            sendMessage(target, "Channel " + channelName + " not found.");
         }
-    } else {
-        sendMessage(target, "Channel information not available (ChannelManager not initialized).");
+		else
+            sendMessage(target, "Channel " + channelName + " not found.");
     }
+	else
+        sendMessage(target, "Channel information not available (ChannelManager not initialized).");
 }
 
 void IRCBot::handleChannels(const std::string& target)
 {
-    if (_channelManager) {
-        if (_channels.empty()) {
+    if (_channelManager)
+	{
+        if (_channels.empty())
             sendMessage(target, "Bot is not currently in any channels.");
-        } else {
+        else
+		{
             std::stringstream channelList;
             channelList << "Bot is in channels: ";
-            for (size_t i = 0; i < _channels.size(); ++i) {
+            for (size_t i = 0; i < _channels.size(); ++i)
+			{
                 if (i > 0) channelList << ", ";
                 channelList << _channels[i];
             }
             sendMessage(target, channelList.str());
         }
-    } else {
-        sendMessage(target, "Channel information not available (ChannelManager not initialized).");
     }
+	else
+        sendMessage(target, "Channel information not available (ChannelManager not initialized).");
 }
 
 void IRCBot::handleJoke(const std::string& target)
@@ -337,7 +327,6 @@ void IRCBot::handleQuote(const std::string& target)
     quotes.push_back("\"Clean code always looks like it was written by someone who cares.\" - Robert C. Martin");
     quotes.push_back("\"Programs must be written for people to read, and only incidentally for machines to execute.\" - Harold Abelson");
     quotes.push_back("\"Any fool can write code that a computer can understand. Good programmers write code that humans can understand.\" - Martin Fowler");
-    
     int randomIndex = rand() % quotes.size();
     sendMessage(target, quotes[randomIndex]);
 }
@@ -346,7 +335,6 @@ void IRCBot::sendMessage(const std::string& target, const std::string& message)
 {
     if (!_userManager)
         return;
-        
     User* targetUser = _userManager->getUserByNickname(target);
     if (targetUser)
     {
@@ -356,30 +344,29 @@ void IRCBot::sendMessage(const std::string& target, const std::string& message)
     }
     else if (target[0] == '#')
     {
-        if (_channelManager) {
+        if (_channelManager)
+		{
             Channel* channel = _channelManager->getChannel(target);
-            if (channel && channel->isMember(this)) {
+            if (channel && channel->isMember(this))
+			{
                 std::string response = ":" + getPrefix() + " PRIVMSG " + target + " :" + message + "\r\n";
                 channel->broadcastMessage(response, this);
                 std::cout << "Bot message to channel " << target << ": " << message << std::endl;
-            } else {
-                std::cout << "Bot: Cannot send to channel " << target << " (not a member or channel doesn't exist)" << std::endl;
             }
-        } else {
-            std::cout << "Bot message to channel " << target << ": " << message << std::endl;
+			else
+                std::cout << "Bot: Cannot send to channel " << target << " (not a member or channel doesn't exist)" << std::endl;
         }
+		else
+            std::cout << "Bot message to channel " << target << ": " << message << std::endl;
     }
     else
-    {
         std::cout << "Bot: Target user " << target << " not found" << std::endl;
-    }
 }
 
 void IRCBot::sendNotice(const std::string& target, const std::string& message)
 {
     if (!_userManager)
         return;
-        
     User* targetUser = _userManager->getUserByNickname(target);
     if (targetUser)
     {
@@ -388,9 +375,7 @@ void IRCBot::sendNotice(const std::string& target, const std::string& message)
         std::cout << "Bot notice to " << target << ": " << message << std::endl;
     }
     else
-    {
         std::cout << "Bot: Target user " << target << " not found for notice" << std::endl;
-    }
 }
 
 bool IRCBot::isCommand(const std::string& message)
@@ -404,13 +389,9 @@ std::string IRCBot::extractCommand(const std::string& message)
 		return "";
     size_t spacePos = message.find(' ');
     if (spacePos == std::string::npos)
-	{
         return message.substr(1);
-    }
 	else
-	{
         return message.substr(1, spacePos - 1);
-    }
 }
 
 std::vector<std::string> IRCBot::extractParams(const std::string& message)
@@ -431,15 +412,16 @@ std::vector<std::string> IRCBot::extractParams(const std::string& message)
 
 void IRCBot::joinChannel(const std::string& channel)
 {
-    if (std::find(_channels.begin(), _channels.end(), channel) == _channels.end()) {
+    if (std::find(_channels.begin(), _channels.end(), channel) == _channels.end())
+	{
         _channels.push_back(channel);
-        if (_channelManager) {
+        if (_channelManager)
+		{
             Channel* ch = _channelManager->getChannel(channel);
             if (ch) {
                 ch->addUser(this);
             }
         }
-        
         IRCMessage msg;
         msg.prefix = getPrefix();
         msg.command = "JOIN";
@@ -454,13 +436,12 @@ void IRCBot::leaveChannel(const std::string& channel)
     if (it != _channels.end())
 	{
         _channels.erase(it);
-        if (_channelManager) {
+        if (_channelManager)
+		{
             Channel* ch = _channelManager->getChannel(channel);
-            if (ch) {
+            if (ch)
                 ch->removeUser(this);
-            }
         }
-        
         IRCMessage msg;
         msg.prefix = getPrefix();
         msg.command = "PART";
@@ -483,17 +464,13 @@ bool IRCBot::isActive() const
 void IRCBot::onUserJoin(const std::string& channel, const std::string& user)
 {
     if (_isActive && std::find(_channels.begin(), _channels.end(), channel) != _channels.end())
-	{
         sendMessage(channel, "Welcome to " + channel + ", " + user + "! Type !help if you need assistance.");
-    }
 }
 
 void IRCBot::onUserLeave(const std::string& channel, const std::string& user)
 {
     if (_isActive && std::find(_channels.begin(), _channels.end(), channel) != _channels.end())
-	{
         sendMessage(channel, "Goodbye, " + user + "!");
-    }
 }
 
 void IRCBot::onUserQuit(const std::string&)
@@ -520,9 +497,7 @@ std::string IRCBot::getUptime() const
     int seconds = uptime % 60;
     std::stringstream ss;
     if (days > 0)
-	{
         ss << days << " days, ";
-    }
     ss << hours << " hours, " << minutes << " minutes, " << seconds << " seconds";
     return ss.str();
 }
