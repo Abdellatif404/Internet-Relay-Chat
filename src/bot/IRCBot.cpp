@@ -39,6 +39,7 @@ void IRCBot::initializeHelpCommands()
     _helpCommands["uptime"] = "Show bot uptime";
     _helpCommands["userinfo"] = "Get information about a user (usage: !userinfo <nickname>)";
     _helpCommands["channelinfo"] = "Get information about current channel";
+    _helpCommands["channels"] = "List all available channels";
     _helpCommands["joke"] = "Tell a random joke";
     _helpCommands["quote"] = "Share an inspirational quote";
 }
@@ -83,6 +84,8 @@ void IRCBot::processPrivateMessage(const std::string& sender, const std::string&
             handleUptime(sender);
         else if (command == "userinfo")
             handleUserInfo(sender, params);
+        else if (command == "channels")
+            handleChannels(sender);
         else if (command == "joke")
             handleJoke(sender);
         else if (command == "quote")
@@ -98,14 +101,12 @@ void IRCBot::processPrivateMessage(const std::string& sender, const std::string&
 
 void IRCBot::processChannelMessage(const std::string& sender, const std::string& channel, const std::string& message)
 {
-    (void)channel; // Suppress unused parameter warning
     std::string lowerMessage = message;
     std::transform(lowerMessage.begin(), lowerMessage.end(), lowerMessage.begin(), ::tolower);
     if (isCommand(message))
 	{
         std::string command = extractCommand(message);
         std::vector<std::string> params = extractParams(message);
-        // For channel commands, respond to the sender instead of the channel
         if (command == "help")
             handleHelp(sender, params);
         else if (command == "time")
@@ -121,7 +122,9 @@ void IRCBot::processChannelMessage(const std::string& sender, const std::string&
         else if (command == "userinfo")
             handleUserInfo(sender, params);
         else if (command == "channelinfo")
-            handleChannelInfo(sender, params);
+            handleChannelInfo(channel, params);
+        else if (command == "channels")
+            handleChannels(sender);
         else if (command == "joke")
             handleJoke(sender);
         else if (command == "quote")
@@ -256,14 +259,58 @@ void IRCBot::handleUserInfo(const std::string& target, const std::vector<std::st
     }
 }
 
-void IRCBot::handleChannelInfo(const std::string& target, const std::vector<std::string>& )
+void IRCBot::handleChannelInfo(const std::string& target, const std::vector<std::string>& params)
 {
-    if (target.substr(0, 1) != "#")
-	{
-        sendMessage(target, "This command can only be used in channels.");
-        return;
+    std::string channelName;
+    if (params.empty()) {
+        if (target.substr(0, 1) != "#") {
+            sendMessage(target, "This command can only be used in channels or specify a channel name.");
+            return;
+        }
+        channelName = target;
+    } else {
+        channelName = params[0];
+        if (channelName.substr(0, 1) != "#") {
+            channelName = "#" + channelName;
+        }
     }
-    sendMessage(target, "Channel: " + target + " - Bot monitoring active");
+    
+    if (_channelManager) {
+        Channel* channel = _channelManager->getChannel(channelName);
+        if (channel) {
+            std::stringstream info;
+            info << "Channel " << channelName << " - Topic: " << channel->getTopic();
+            info << " - Users: " << channel->getMemberCount();
+            std::string modeString = channel->getModeString();
+            if (!modeString.empty()) {
+                info << " - Mode: " << modeString;
+            }
+            sendMessage(target, info.str());
+        } else {
+            sendMessage(target, "Channel " + channelName + " not found.");
+        }
+    } else {
+        sendMessage(target, "Channel information not available (ChannelManager not initialized).");
+    }
+}
+
+void IRCBot::handleChannels(const std::string& target)
+{
+    if (_channelManager) {
+        if (_channels.empty()) {
+            sendMessage(target, "Bot is not currently in any channels.");
+        } else {
+            std::stringstream channelList;
+            channelList << "Bot is in channels: ";
+            for (size_t i = 0; i < _channels.size(); ++i) {
+                if (i > 0) channelList << ", ";
+                channelList << _channels[i];
+            }
+            sendMessage(target, channelList.str());
+        }
+    } else {
+        sendMessage(target, "Channel information not available (ChannelManager not initialized).");
+    }
 }
 
 void IRCBot::handleJoke(const std::string& target)
@@ -309,7 +356,18 @@ void IRCBot::sendMessage(const std::string& target, const std::string& message)
     }
     else if (target[0] == '#')
     {
-        std::cout << "Bot message to channel " << target << ": " << message << std::endl;
+        if (_channelManager) {
+            Channel* channel = _channelManager->getChannel(target);
+            if (channel && channel->isMember(this)) {
+                std::string response = ":" + getPrefix() + " PRIVMSG " + target + " :" + message + "\r\n";
+                channel->broadcastMessage(response, this);
+                std::cout << "Bot message to channel " << target << ": " << message << std::endl;
+            } else {
+                std::cout << "Bot: Cannot send to channel " << target << " (not a member or channel doesn't exist)" << std::endl;
+            }
+        } else {
+            std::cout << "Bot message to channel " << target << ": " << message << std::endl;
+        }
     }
     else
     {
@@ -375,6 +433,13 @@ void IRCBot::joinChannel(const std::string& channel)
 {
     if (std::find(_channels.begin(), _channels.end(), channel) == _channels.end()) {
         _channels.push_back(channel);
+        if (_channelManager) {
+            Channel* ch = _channelManager->getChannel(channel);
+            if (ch) {
+                ch->addUser(this);
+            }
+        }
+        
         IRCMessage msg;
         msg.prefix = getPrefix();
         msg.command = "JOIN";
@@ -389,6 +454,13 @@ void IRCBot::leaveChannel(const std::string& channel)
     if (it != _channels.end())
 	{
         _channels.erase(it);
+        if (_channelManager) {
+            Channel* ch = _channelManager->getChannel(channel);
+            if (ch) {
+                ch->removeUser(this);
+            }
+        }
+        
         IRCMessage msg;
         msg.prefix = getPrefix();
         msg.command = "PART";
