@@ -10,61 +10,33 @@ bool BotCommand::execute(User* user, const std::vector<std::string>& params, Bot
         sendResponse(user, "Usage: /BOT <subcommand>. Use /BOT HELP for available commands", userManager);
         return true;
     }
-
     std::string subCommand = params[0];
-    
-    // Convert to uppercase for case-insensitive comparison
     for (size_t i = 0; i < subCommand.length(); ++i)
-    {
         subCommand[i] = std::toupper(subCommand[i]);
-    }
-
     if (subCommand == "HELP")
-    {
         handleHelp(user, userManager);
-    }
     else if (subCommand == "LIST")
-    {
         handleList(user, botManager, userManager);
-    }
     else if (subCommand == "CREATE" && isOperator(user))
-    {
         handleCreate(user, params, botManager, userManager);
-    }
     else if (subCommand == "REMOVE" && isOperator(user))
-    {
         handleRemove(user, params, botManager, userManager);
-    }
     else if (subCommand == "JOIN" && isOperator(user))
-    {
         handleJoin(user, params, botManager, userManager);
-    }
     else if (subCommand == "PART" && isOperator(user))
-    {
         handlePart(user, params, botManager, userManager);
-    }
     else if (subCommand == "ENABLE" && isOperator(user))
-    {
         handleEnable(user, botManager, userManager);
-    }
     else if (subCommand == "DISABLE" && isOperator(user))
-    {
         handleDisable(user, botManager, userManager);
-    }
     else if (subCommand == "STATUS")
-    {
         handleStatus(user, botManager, userManager);
-    }
     else
     {
         if (!isOperator(user))
-        {
             sendResponse(user, "Error: You need operator privileges to manage bots", userManager);
-        }
         else
-        {
             sendResponse(user, "Error: Unknown bot command. Use /BOT HELP for available commands", userManager);
-        }
     }
     return true;
 }
@@ -110,13 +82,9 @@ void BotCommand::handleCreate(User* user, const std::vector<std::string>& params
     
     IRCBot* newBot = botManager->createBot(botNick);
     if (newBot)
-    {
         sendResponse(user, "Bot '" + botNick + "' created successfully", userManager);
-    }
     else
-    {
         sendResponse(user, "Error: Failed to create bot '" + botNick + "'", userManager);
-    }
 }
 
 void BotCommand::handleRemove(User* user, const std::vector<std::string>& params, BotManager* botManager, UserManager* userManager)
@@ -134,9 +102,7 @@ void BotCommand::handleRemove(User* user, const std::vector<std::string>& params
         sendResponse(user, "Bot '" + botNick + "' removed successfully", userManager);
     }
     else
-    {
         sendResponse(user, "Error: Bot '" + botNick + "' not found", userManager);
-    }
 }
 
 void BotCommand::handleJoin(User* user, const std::vector<std::string>& params, BotManager* botManager, UserManager* userManager)
@@ -155,9 +121,7 @@ void BotCommand::handleJoin(User* user, const std::vector<std::string>& params, 
         sendResponse(user, "Bot '" + botNick + "' joined channel '" + channel + "'", userManager);
     }
     else
-    {
         sendResponse(user, "Error: Bot '" + botNick + "' not found", userManager);
-    }
 }
 
 void BotCommand::handlePart(User* user, const std::vector<std::string>& params, BotManager* botManager, UserManager* userManager)
@@ -176,9 +140,7 @@ void BotCommand::handlePart(User* user, const std::vector<std::string>& params, 
         sendResponse(user, "Bot '" + botNick + "' left channel '" + channel + "'", userManager);
     }
     else
-    {
         sendResponse(user, "Error: Bot '" + botNick + "' not found", userManager);
-    }
 }
 
 void BotCommand::handleEnable(User* user, BotManager* botManager, UserManager* userManager)
@@ -216,20 +178,16 @@ void BotCommand::handleHelp(User* user, UserManager* userManager)
         sendResponse(user, "/BOT DISABLE - Disable the bot system", userManager);
     }
     else
-    {
         sendResponse(user, "Note: Operator privileges required for bot management", userManager);
-    }
 }
 
 void BotCommand::sendResponse(User* user, const std::string& message, UserManager* userManager) 
 {
-    std::string response = ":localhost NOTICE " + user->getNickname() + " :" + message + "\r\n";
+    std::string response = ":" + userManager->getServerName() + " NOTICE " + user->getNickname() + " :" + message + "\r\n";
     userManager->sendMessage(user, response);
 }
 
 bool BotCommand::isOperator(User* user)
 {
-    // For now, all registered users are operators
-    // In a real implementation, you'd check against an operator list
     return user->isRegistered();
 }

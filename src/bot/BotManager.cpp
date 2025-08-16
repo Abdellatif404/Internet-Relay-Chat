@@ -30,7 +30,7 @@ IRCBot* BotManager::createBot(const std::string& nickname, int virtualFd)
     user->setNickname(nickname);
     user->setUsername("bot");
     user->setRealname("IRC Bot");
-    user->setHostname("localhost");
+    user->setHostname(_userManager->getServerName());
     user->setState(REGISTERED);
     user->setAuthenticated(true);
     
