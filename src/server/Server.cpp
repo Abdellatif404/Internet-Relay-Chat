@@ -33,6 +33,6 @@ void Server::start()
 
 void Server::shutdown()
 {
-	// TODO: Broadcast shutdown message to all clients
-	_eventLoop->stop();
+	if (_eventLoop)
+		_eventLoop->stop();
 }

@@ -6,6 +6,7 @@
 #include "ConnectionManager.hpp"
 #include "UserManager.hpp"
 #include "ChannelManager.hpp"
+#include "BotManager.hpp"
 
 class	EventLoop
 {
@@ -16,6 +17,7 @@ class	EventLoop
 		ConnectionManager				*_connManager;
 		UserManager						*_userManager;
 		ChannelManager					*_chanManager;
+		BotManager						*_botManager;
 		MessageBuffer					*_msgBuffer;
 		SendQueue						*_sendQueue;
 	public:

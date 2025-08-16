@@ -13,6 +13,7 @@
 #include "ModeCommand.hpp"
 #include "KickCommand.hpp"
 #include "InviteCommand.hpp"
+#include "BotCommand.hpp"
 #include "MessageParser.hpp"
 
 void EventHandler::_protect(int status, strRef errorMsg)
@@ -21,7 +22,7 @@ void EventHandler::_protect(int status, strRef errorMsg)
 		throw std::runtime_error(errorMsg);
 }
 
-void EventHandler::_processMessage(ChannelManager *chanManager, UserManager *userManager, MessageBuffer *msgBuffer, SendQueue *sendQueue, int fd)
+void EventHandler::_processMessage(ChannelManager *chanManager, UserManager *userManager, BotManager *botManager, MessageBuffer *msgBuffer, SendQueue *sendQueue, int fd)
 {
 	std::string message;
 	while (!(message = msgBuffer->extractMessage(fd)).empty())
@@ -39,7 +40,7 @@ void EventHandler::_processMessage(ChannelManager *chanManager, UserManager *use
 		else if (ircMsg.command == "USER")
 			UserCommand::execute(user, ircMsg.params, userManager);
 		else if (ircMsg.command == "PRIVMSG")
-			PrivMsgCommand::execute(user, ircMsg.params, userManager);
+			PrivMsgCommand::execute(user, ircMsg.params, userManager, chanManager, botManager);
 		else if (ircMsg.command == "QUIT")
 			QuitCommand::execute(user, ircMsg.params, userManager);
 		else if (ircMsg.command == "PING")
@@ -67,6 +68,9 @@ void EventHandler::_processMessage(ChannelManager *chanManager, UserManager *use
 		else if (ircMsg.command == "INVITE") {
 			InviteCommand inviteCmd(chanManager, userManager, sendQueue);
 			inviteCmd.execute(user, ircMsg.params);
+		}
+		else if (ircMsg.command == "BOT") {
+			BotCommand::execute(user, ircMsg.params, botManager, userManager);
 		}
 		else
 		{
@@ -114,12 +118,12 @@ void EventHandler::clientDisconnection(ConnectionManager *connManager, UserManag
 	close(eventFd);
 }
 
-void EventHandler::recvFromClient(ChannelManager *chanManager, UserManager *userManager, Connection *conn, MessageBuffer *msgBuffer, SendQueue *sendQueue)
+void EventHandler::recvFromClient(ChannelManager *chanManager, UserManager *userManager, BotManager *botManager, Connection *conn, MessageBuffer *msgBuffer, SendQueue *sendQueue)
 {
 	if (!conn || !msgBuffer)
 		return;
 	conn->receiveData(msgBuffer);
-	_processMessage(chanManager, userManager, msgBuffer, sendQueue, conn->getFd());
+	_processMessage(chanManager, userManager, botManager, msgBuffer, sendQueue, conn->getFd());
 }
 
 void EventHandler::sendToClient(Connection *conn, SendQueue *sendQueue, int epollFd)
