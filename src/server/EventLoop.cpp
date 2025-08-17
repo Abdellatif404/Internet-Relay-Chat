@@ -38,8 +38,11 @@ void EventLoop::handleEvents()
 		uint32_t	eventFlags = _events[i].events;
 
 		if (eventFd == _srvFd)
+		{
+
 			if (eventFlags & EPOLLIN)
-				EventHandler::newConnection(_connManager, _srvFd, _epFd);
+			EventHandler::newConnection(_connManager, _srvFd, _epFd);
+		}
 		else
 		{
 			if (eventFd < 0)
