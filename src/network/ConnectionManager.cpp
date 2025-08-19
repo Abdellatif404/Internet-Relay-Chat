@@ -2,7 +2,10 @@
 #include "ConnectionManager.hpp"
 #include "SocketHandler.hpp"
 
-ConnectionManager::ConnectionManager()
+ConnectionManager::ConnectionManager(MessageBuffer *msgBuffer, SendQueue *sendQueue, 
+									 eventVec &events, int epollFd)
+	: _msgBuffer(msgBuffer), _sendQueue(sendQueue), 
+	  _events(events), _epollFd(epollFd)
 {
 }
 
@@ -50,8 +53,13 @@ void ConnectionManager::removeConnection(int fd)
 	ConnectionMap::iterator it = _connections.find(fd);
 	if (it != _connections.end())
 	{
-		Connection *conn = it->second;
-		delete conn;
+		_msgBuffer->getBuffers().erase(fd);
+		_sendQueue->getClientQueues().erase(fd);
+		delete it->second;
 		_connections.erase(it);
+		_events[fd].data.fd = -1;
+		_events[fd].events = 0;
+		SocketHandler::removeSocket(_epollFd, fd);
+		close(fd);
 	}
 }
