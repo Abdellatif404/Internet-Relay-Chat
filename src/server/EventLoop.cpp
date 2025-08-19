@@ -4,13 +4,16 @@
 #include "EventHandler.hpp"
 #include "BotManager.hpp"
 
-EventLoop::EventLoop(int serverFd, strRef pass, strRef srvName, strRef srvVersion, time_t startTime): _srvFd(serverFd), _epFd(-1)
+extern bool g_running;
+
+EventLoop::EventLoop(int serverFd, strRef pass, strRef srvName, strRef srvVersion, time_t startTime)
+	: _srvFd(serverFd), _epFd(-1)
 {
 	(void)startTime;
 	_epFd = EventHandler::initEpoll(_events);
 	_msgBuffer = new MessageBuffer();
 	_sendQueue = new SendQueue(_epFd);
-	_connManager = new ConnectionManager();
+	_connManager = new ConnectionManager(_msgBuffer, _sendQueue, _events, _epFd);
 	_userManager = new UserManager(pass, _sendQueue, srvName, srvVersion);
 	_chanManager = new ChannelManager(_sendQueue);
 	_botManager = new BotManager(_userManager, _chanManager);
@@ -39,9 +42,8 @@ void EventLoop::handleEvents()
 
 		if (eventFd == _srvFd)
 		{
-
 			if (eventFlags & EPOLLIN)
-			EventHandler::newConnection(_connManager, _srvFd, _epFd);
+				EventHandler::newConnection(_connManager, _srvFd, _epFd);
 		}
 		else
 		{
@@ -49,18 +51,22 @@ void EventLoop::handleEvents()
 				continue;
 			if (eventFlags & (EPOLLRDHUP | EPOLLHUP | EPOLLERR))
 			{
-				EventHandler::clientDisconnection(_connManager, _userManager, _epFd, eventFd, _events[i]);
+				EventHandler::clientDisconnection(_connManager, _userManager, _chanManager, eventFd);
 				continue;
 			}
-			if (eventFlags & (EPOLLIN | EPOLLOUT))
+			if (eventFlags & EPOLLIN)
 			{
 				Connection		*conn = _connManager->getConnection(eventFd);
 				if (!conn)
 					continue;
-				if (eventFlags & EPOLLIN)
-					EventHandler::recvFromClient(_chanManager, _userManager, _botManager, conn, _msgBuffer, _sendQueue);
-				if (eventFlags & EPOLLOUT)
-					EventHandler::sendToClient(conn, _sendQueue, _epFd);
+				EventHandler::recvFromClient(_connManager, _chanManager, _userManager, _botManager, conn, _msgBuffer, _sendQueue);
+			}
+			if (eventFlags & EPOLLOUT)
+			{
+				Connection		*conn = _connManager->getConnection(eventFd);
+				if (!conn)
+					continue;
+				EventHandler::sendToClient(conn, _sendQueue, _epFd);
 			}
 		}
 	}
@@ -70,7 +76,8 @@ void EventLoop::run()
 {
 	SocketHandler::addSocket(_epFd, _srvFd);
 	std::cout << GREEN << "Server is running..." << RESET << std::endl;
-	while (true)
+	g_running = true;
+	while (g_running)
 		handleEvents();
 }
 

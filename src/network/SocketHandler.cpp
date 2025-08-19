@@ -76,7 +76,8 @@ void SocketHandler::modifySocket(int epFd, int fd, uint32_t events)
 	event.data.fd = fd;
 
 	int exitCode = epoll_ctl(epFd, EPOLL_CTL_MOD, fd, &event);
-	_protect(exitCode, "Failed to modify socket in epoll");
+	if (exitCode < 0)
+		std::cerr << YELLOW << "Failed to modify socket in epoll: " << strerror(errno) << RESET << std::endl;
 }
 
 void SocketHandler::removeSocket(int epFd, int fd)

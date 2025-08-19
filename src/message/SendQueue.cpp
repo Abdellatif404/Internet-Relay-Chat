@@ -11,6 +11,11 @@ SendQueue::~SendQueue()
 {
 };
 
+ClientQueueMap &SendQueue::getClientQueues()
+{
+	return _clientQueues;
+}
+
 void SendQueue::enqueueMessage(int clientFd, strRef message)
 {
 	_clientQueues[clientFd].push(message);

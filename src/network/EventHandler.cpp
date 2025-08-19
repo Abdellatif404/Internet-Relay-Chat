@@ -22,7 +22,7 @@ void EventHandler::_protect(int status, strRef errorMsg)
 		throw std::runtime_error(errorMsg);
 }
 
-void EventHandler::_processMessage(ChannelManager *chanManager, UserManager *userManager, BotManager *botManager, MessageBuffer *msgBuffer, SendQueue *sendQueue, int fd)
+void EventHandler::_processMessage(ConnectionManager *connManager, ChannelManager *chanManager, UserManager *userManager, BotManager *botManager, MessageBuffer *msgBuffer, SendQueue *sendQueue, int fd)
 {
 	std::string message;
 	while (!(message = msgBuffer->extractMessage(fd)).empty())
@@ -42,7 +42,7 @@ void EventHandler::_processMessage(ChannelManager *chanManager, UserManager *use
 		else if (ircMsg.command == "PRIVMSG")
 			PrivMsgCommand::execute(user, ircMsg.params, userManager, chanManager, botManager);
 		else if (ircMsg.command == "QUIT")
-			QuitCommand::execute(user, ircMsg.params, userManager);
+			QuitCommand::execute(user, ircMsg.params, userManager, connManager, chanManager);
 		else if (ircMsg.command == "PING")
 			PingCommand::execute(user, ircMsg.params, userManager);
 		else if (ircMsg.command == "JOIN") {
@@ -96,7 +96,6 @@ int EventHandler::initEpoll(eventVec &events)
 int EventHandler::waitForEvents(int epollFd, eventVec &events)
 {
 	int eventCount = epoll_wait(epollFd, events.data(), events.size(), -1);
-	_protect(eventCount, "Failed to wait for epoll events");
 	return eventCount;
 }
 
@@ -108,22 +107,19 @@ void EventHandler::newConnection(ConnectionManager *connManager, int serverFd, i
 	SocketHandler::addSocket(epollFd, fd);
 }
 
-void EventHandler::clientDisconnection(ConnectionManager *connManager, UserManager *userManager, int epollFd, int eventFd, event_t &event)
+void EventHandler::clientDisconnection(ConnectionManager *connManager, UserManager *userManager, ChannelManager *chanManager, int eventFd)
 {
-	connManager->removeConnection(eventFd);
+	chanManager->removeUserFromAllChannels(userManager->getUser(eventFd));
 	userManager->removeUser(eventFd);
-	event.data.fd = -1;
-	event.events = 0;
-	SocketHandler::removeSocket(epollFd, eventFd);
-	close(eventFd);
+	connManager->removeConnection(eventFd);
 }
 
-void EventHandler::recvFromClient(ChannelManager *chanManager, UserManager *userManager, BotManager *botManager, Connection *conn, MessageBuffer *msgBuffer, SendQueue *sendQueue)
+void EventHandler::recvFromClient(ConnectionManager *connManager, ChannelManager *chanManager, UserManager *userManager, BotManager *botManager, Connection *conn, MessageBuffer *msgBuffer, SendQueue *sendQueue)
 {
 	if (!conn || !msgBuffer)
 		return;
 	conn->receiveData(msgBuffer);
-	_processMessage(chanManager, userManager, botManager, msgBuffer, sendQueue, conn->getFd());
+	_processMessage(connManager, chanManager, userManager, botManager, msgBuffer, sendQueue, conn->getFd());
 }
 
 void EventHandler::sendToClient(Connection *conn, SendQueue *sendQueue, int epollFd)
@@ -131,6 +127,7 @@ void EventHandler::sendToClient(Connection *conn, SendQueue *sendQueue, int epol
 	if (!conn || !sendQueue)
 		return;
 	conn->sendData(sendQueue);
-	if (!sendQueue->hasQueuedMessages(conn->getFd()))
-		SocketHandler::modifySocket(epollFd, conn->getFd(), EPOLLIN);
+	int fd = conn->getFd();
+	if (!sendQueue->hasQueuedMessages(fd))
+		SocketHandler::modifySocket(epollFd, fd, EPOLLIN);
 }

@@ -11,8 +11,12 @@ class	ConnectionManager
 {
 	private:
 		ConnectionMap	_connections;
+		MessageBuffer	*_msgBuffer;
+		SendQueue		*_sendQueue;
+		eventVec		_events;
+		int				_epollFd;
 	public:
-		ConnectionManager();
+		ConnectionManager(MessageBuffer *msgBuffer, SendQueue *sendQueue, eventVec &events, int epollFd);
 		~ConnectionManager();
 
 		Connection		*getConnection(int fd);

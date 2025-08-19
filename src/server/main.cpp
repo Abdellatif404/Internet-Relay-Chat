@@ -3,17 +3,14 @@
 #include "Server.hpp"
 
 Server *g_server = NULL;
+bool	g_running = false;
 
 void	signalHandler(int signal)
 {
 	(void)signal;
+	g_running = false;
 	if (g_server)
-	{
 		std::cout << RED << "Server shutting down..." << RESET << std::endl;
-		delete g_server;
-		g_server = NULL;
-	}
-	exit(0);
 }
 
 int	validate_port(char *str)
