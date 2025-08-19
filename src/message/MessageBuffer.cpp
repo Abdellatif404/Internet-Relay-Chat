@@ -10,6 +10,11 @@ MessageBuffer::~MessageBuffer()
 {
 }
 
+ClientBufferMap &MessageBuffer::getBuffers()
+{
+	return _buffers;
+}
+
 void MessageBuffer::storeMessage(int fd, const char *data, size_t size)
 {
 	_buffers[fd].insert(_buffers[fd].end(), data, data + size);

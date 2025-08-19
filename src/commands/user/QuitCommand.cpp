@@ -3,7 +3,7 @@
 #include "UserManager.hpp"
 #include <iostream>
 
-bool QuitCommand::execute(User* user, const std::vector<std::string>& params, UserManager* userManager) {
+bool QuitCommand::execute(User* user, const std::vector<std::string>& params, UserManager* userManager, ConnectionManager *connManager, ChannelManager *chanManager) {
     std::string quitMessage = parseQuitMessage(params);
     
     if (quitMessage.empty()) {
@@ -13,7 +13,7 @@ bool QuitCommand::execute(User* user, const std::vector<std::string>& params, Us
     std::cout << "User " << user->getNickname() << " quitting: " << quitMessage << std::endl;
     
     // Handle user quit (this will send QUIT message to channels and clean up)
-    userManager->handleUserQuit(user, quitMessage);
+    userManager->handleUserQuit(user, connManager, chanManager, quitMessage);
     
     return true; // Return true even though user will be disconnected
 }

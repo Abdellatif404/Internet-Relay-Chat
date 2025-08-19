@@ -17,6 +17,7 @@ class	MessageBuffer
 		MessageBuffer();
 		~MessageBuffer();
 
+		ClientBufferMap &getBuffers();
 		void		storeMessage(int fd, const char *data, size_t size);
 		std::string	extractMessage(int fd);
 };

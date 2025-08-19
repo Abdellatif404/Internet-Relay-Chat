@@ -239,7 +239,7 @@ std::string UserManager::toLowerCase(const std::string& str) const
     return result;
 }
 
-void UserManager::handleUserQuit(User* user, const std::string& quitMessage)
+void UserManager::handleUserQuit(User* user, ConnectionManager *connManager, ChannelManager *chanManager, const std::string& quitMessage)
 {
     if (!user)
 		return;
@@ -249,7 +249,10 @@ void UserManager::handleUserQuit(User* user, const std::string& quitMessage)
     std::string nick = user->getNickname();
     std::string message = quitMessage.empty() ? "Client Quit" : quitMessage;
     std::string quitMsg = ":" + user->getPrefix() + " QUIT :" + message + "\r\n";
-    removeUser(user->getFd());
+    int fd = user->getFd();
+	chanManager->removeUserFromAllChannels(user);
+    removeUser(fd);
+	connManager->removeConnection(fd);
 }
 
 void UserManager::pingUsers()

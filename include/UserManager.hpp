@@ -3,6 +3,8 @@
 
 #include "User.hpp"
 #include "SendQueue.hpp"
+#include "ConnectionManager.hpp"
+#include "ChannelManager.hpp"
 
 class UserManager
 {
@@ -45,7 +47,7 @@ class UserManager
 		void enablePeriodicStats(bool enable) { _periodicStatsEnabled = enable; }
 		void checkAndPrintStats();
 		std::string toLowerCase(const std::string& str) const;
-		void handleUserQuit(User* user, const std::string& quitMessage = "");
+		void handleUserQuit(User* user, ConnectionManager *connManager, ChannelManager *chanManager, const std::string& quitMessage = "");
 		void pingUsers();
 		void disconnectIdleUsers();
 		void sendError(User* user, int errorCode, const std::string& errorText = "");
