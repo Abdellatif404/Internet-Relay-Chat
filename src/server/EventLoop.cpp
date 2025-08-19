@@ -41,8 +41,10 @@ void EventLoop::handleEvents()
 		uint32_t	eventFlags = _events[i].events;
 
 		if (eventFd == _srvFd)
+		{
 			if (eventFlags & EPOLLIN)
 				EventHandler::newConnection(_connManager, _srvFd, _epFd);
+		}
 		else
 		{
 			if (eventFd < 0)
@@ -57,7 +59,7 @@ void EventLoop::handleEvents()
 				Connection		*conn = _connManager->getConnection(eventFd);
 				if (!conn)
 					continue;
-				EventHandler::recvFromClient(_connManager, _chanManager, _userManager, conn, _msgBuffer, _sendQueue);
+				EventHandler::recvFromClient(_connManager, _chanManager, _userManager, _botManager, conn, _msgBuffer, _sendQueue);
 			}
 			if (eventFlags & EPOLLOUT)
 			{
