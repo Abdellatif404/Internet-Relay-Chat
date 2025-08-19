@@ -96,8 +96,6 @@ int EventHandler::initEpoll(eventVec &events)
 int EventHandler::waitForEvents(int epollFd, eventVec &events)
 {
 	int eventCount = epoll_wait(epollFd, events.data(), events.size(), -1);
-	if (eventCount < 0)
-		std::cerr << YELLOW << "Failed to wait for epoll events: " << strerror(errno) << RESET << std::endl;
 	return eventCount;
 }
 
