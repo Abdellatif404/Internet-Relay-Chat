@@ -221,9 +221,9 @@ std::string UserManager::toLowerCase(const std::string& str) const
 void UserManager::handleUserQuit(User* user, ConnectionManager *connManager, ChannelManager *chanManager, const std::string& quitMessage)
 {
 	(void) quitMessage;
-    if (!user)
+  if (!user)
 		return;
-    int fd = user->getFd();
+  int fd = user->getFd();
 	chanManager->removeUserFromAllChannels(user);
     removeUser(fd);
 	connManager->removeConnection(fd);
