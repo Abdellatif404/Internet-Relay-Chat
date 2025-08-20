@@ -442,7 +442,7 @@ void IRCBot::joinChannel(const std::string& channel)
         msg.prefix = getPrefix();
         msg.command = "JOIN";
         msg.params.push_back(channel);
-        std::cout << "Bot joining: " << MessageParser::serialize(msg) << std::endl;
+        std::cout << "Bot joining: " << MessageParser::serialize(msg);
     }
 }
 
@@ -463,7 +463,7 @@ void IRCBot::leaveChannel(const std::string& channel)
         msg.command = "PART";
         msg.params.push_back(channel);
         msg.trailing = "Bot leaving channel";
-        std::cout << "Bot leaving: " << MessageParser::serialize(msg) << std::endl;
+        std::cout << "Bot leaving: " << MessageParser::serialize(msg);
     }
 }
 
