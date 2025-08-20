@@ -13,7 +13,6 @@ SRCS = src/server/main.cpp src/server/EventLoop.cpp \
 		src/commands/user/PingCommand.cpp \
 		src/commands/user/PrivMsgCommand.cpp \
 		src/commands/user/QuitCommand.cpp \
-		src/commands/user/CapCommand.cpp \
 		src/commands/user/BotCommand.cpp \
 		src/commands/channel/JoinCommand.cpp \
 		src/commands/channel/PartCommand.cpp \

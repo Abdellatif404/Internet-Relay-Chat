@@ -20,26 +20,20 @@ IRCBot* BotManager::createBot(const std::string& nickname, int virtualFd)
         return NULL;
     if (virtualFd == -1)
         virtualFd = _nextBotFd--;
-    
-    // Create the bot user in UserManager first
     User* user = _userManager->createUser(virtualFd);
     if (!user)
         return NULL;
-        
-    // Set bot properties
     user->setNickname(nickname);
     user->setUsername("bot");
     user->setRealname("IRC Bot");
     user->setHostname(_userManager->getServerName());
     user->setState(REGISTERED);
     user->setAuthenticated(true);
-    
-    // Register the nickname
-    if (!_userManager->registerNickname(user, nickname)) {
+    if (!_userManager->registerNickname(user, nickname))
+	{
         _userManager->removeUser(virtualFd);
         return NULL;
     }
-    
     IRCBot* bot = new IRCBot(virtualFd, _userManager, _channelManager);
     bot->setNickname(nickname);
     _bots[nickname] = bot;
@@ -56,10 +50,7 @@ void BotManager::removeBot(const std::string& nickname)
         std::vector<std::string> channels = bot->getJoinedChannels();
         for (size_t i = 0; i < channels.size(); ++i)
             bot->leaveChannel(channels[i]);
-            
-        // Remove from UserManager
         _userManager->removeUser(bot->getFd());
-        
         delete it->second;
         _bots.erase(it);
         

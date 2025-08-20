@@ -41,11 +41,5 @@ void Connection::sendData(SendQueue *sendQueue)
 {
 	std::string message = sendQueue->dequeueMessage(_fd);
 	if (!message.empty())
-	{
-		ssize_t sentBytes = send(_fd, message.c_str(), message.size(), 0);
-		if (sentBytes < static_cast<ssize_t>(message.size()))
-		{
-			sendQueue->enqueueMessage(_fd, message.substr(sentBytes));
-		}
-	}
+		send(_fd, message.c_str(), message.size(), 0);
 }

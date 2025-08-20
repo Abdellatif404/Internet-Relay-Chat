@@ -37,19 +37,18 @@ User* UserManager::createUser(int fd)
 void UserManager::removeUser(int fd)
 {
     std::map<int, User*>::iterator it = _users.find(fd);
-    if (it != _users.end())
-	{
-        User* user = it->second;
-        if (!user->getNickname().empty())
-		{
-            std::string lowerNick = toLowerCase(user->getNickname());
-            std::map<std::string, User*>::iterator nickIt = _nicknames.find(lowerNick);
-            if (nickIt != _nicknames.end() && nickIt->second == user)
-                _nicknames.erase(nickIt);
-        }
-        _users.erase(it);
-        delete user;
+    if (it == _users.end())
+        return;
+    User* user = it->second;
+    if (!user->getNickname().empty())
+    {
+        std::string lowerNick = toLowerCase(user->getNickname());
+        std::map<std::string, User*>::iterator nickIt = _nicknames.find(lowerNick);
+        if (nickIt != _nicknames.end() && nickIt->second == user)
+            _nicknames.erase(nickIt);
     }
+    _users.erase(it);
+    delete user;
 }
 
 User* UserManager::getUser(int fd)
@@ -83,19 +82,14 @@ bool UserManager::isNicknameAvailable(const std::string& nickname)
 bool UserManager::registerNickname(User* user, const std::string& nickname)
 {
     if (!user)
-		return false;
+        return false;
     std::string lowerNick = toLowerCase(nickname);
     std::map<std::string, User*>::iterator it = _nicknames.find(lowerNick);
     if (it != _nicknames.end() && it->second != user)
         return false;
     std::string oldNickname = user->getNickname();
-    if (!oldNickname.empty()) {
-        std::string oldLowerNick = toLowerCase(oldNickname);
-        std::map<std::string, User*>::iterator oldIt = _nicknames.find(oldLowerNick);
-        if (oldIt != _nicknames.end() && oldIt->second == user) {
-            _nicknames.erase(oldIt);
-        }
-    }
+    if (!oldNickname.empty())
+        _nicknames.erase(toLowerCase(oldNickname));
     user->setNickname(nickname);
     _nicknames[lowerNick] = user;
     if (user->getState() == PASS_SET)
@@ -122,20 +116,12 @@ bool UserManager::tryCompleteRegistration(User* user)
 void UserManager::sendWelcomeMessages(User* user)
 {
     std::string nick = user->getNickname();
-    std::string welcome = ":" + _serverName + " " + RPL_WELCOME + " " + nick + " :Welcome to the Internet Relay Network " + user->getPrefix() + "\r\n";
-    _sendQueue->enqueueMessage(user->getFd(), welcome);
-    std::string yourhost = ":" + _serverName + " " + RPL_YOURHOST + " " + nick + " :Your host is " + _serverName + ", running version " + _serverVersion + "\r\n";
-    _sendQueue->enqueueMessage(user->getFd(), yourhost);
-    std::string created = ":" + _serverName + " " + RPL_CREATED + " " + nick + " :This server was created sometime\r\n";
-    _sendQueue->enqueueMessage(user->getFd(), created);
-    std::string myinfo = ":" + _serverName + " " + RPL_MYINFO + " " + nick + " " + _serverName + " " + _serverVersion + " oir owimnstkl\r\n";
-    _sendQueue->enqueueMessage(user->getFd(), myinfo);
-    std::string isupport1 = ":" + _serverName + " " + RPL_ISUPPORT + " " + nick + " CASEMAPPING=rfc1459 CHANLIMIT=#:20 CHANNELLEN=50 CHANTYPES=# ELIST=U EXCEPTS INVEX";
-    isupport1 += " KICKLEN=307 MAXLIST=bqeI:100 MODES=4 NETWORK=ft_irc :are supported by this server\r\n";
-    _sendQueue->enqueueMessage(user->getFd(), isupport1);
-    std::string isupport2 = ":" + _serverName + " " + RPL_ISUPPORT + " " + nick + " NICKLEN=30 PREFIX=(oir)@%+ SAFELIST STATUSMSG=@%+ STD=rfc2812";
-    isupport2 += " TARGMAX=NAMES:1,LIST:1,KICK:1,WHOIS:1,PRIVMSG:4,NOTICE:4,ACCEPT:,MONITOR: :are supported by this server\r\n";
-    _sendQueue->enqueueMessage(user->getFd(), isupport2);
+    sendMessage(user, ":" + _serverName + " 001 " + nick + " :Welcome to the Internet Relay Network " + user->getPrefix() + "\r\n");
+    sendMessage(user, ":" + _serverName + " 002 " + nick + " :Your host is " + _serverName + ", running version " + _serverVersion + "\r\n");
+    sendMessage(user, ":" + _serverName + " 003 " + nick + " :This server was created sometime\r\n");
+    sendMessage(user, ":" + _serverName + " 004 " + nick + " " + _serverName + " " + _serverVersion + " oir owimnstkl\r\n");
+    sendMessage(user, ":" + _serverName + " 005 " + nick + " CASEMAPPING=rfc1459 CHANLIMIT=#:20 CHANNELLEN=50 CHANTYPES=# ELIST=U EXCEPTS INVEX KICKLEN=307 MAXLIST=bqeI:100 MODES=4 NETWORK=ft_irc :are supported by this server\r\n");
+    sendMessage(user, ":" + _serverName + " 005 " + nick + " NICKLEN=30 PREFIX=(oir)@%+ SAFELIST STATUSMSG=@%+ STD=rfc2812 TARGMAX=NAMES:1,LIST:1,KICK:1,WHOIS:1,PRIVMSG:4,NOTICE:4,ACCEPT:,MONITOR: :are supported by this server\r\n");
 }
 
 void UserManager::sendMessage(User* user, const std::string& message)
@@ -160,21 +146,14 @@ size_t UserManager::getUserCount() const
 bool UserManager::changeNickname(User* user, const std::string& newNickname)
 {
     if (!user)
-		return false;
+        return false;
     std::string newLowerNick = toLowerCase(newNickname);
     std::map<std::string, User*>::iterator it = _nicknames.find(newLowerNick);
-    if (it != _nicknames.end() && it->second != user) {
+    if (it != _nicknames.end() && it->second != user)
         return false;
-    }
-    
     std::string oldNickname = user->getNickname();
     if (!oldNickname.empty())
-	{
-        std::string oldLowerNick = toLowerCase(oldNickname);
-        std::map<std::string, User*>::iterator oldIt = _nicknames.find(oldLowerNick);
-        if (oldIt != _nicknames.end() && oldIt->second == user)
-            _nicknames.erase(oldIt);
-    }
+        _nicknames.erase(toLowerCase(oldNickname));
     user->setNickname(newNickname);
     _nicknames[newLowerNick] = user;
     return true;
@@ -241,15 +220,10 @@ std::string UserManager::toLowerCase(const std::string& str) const
 
 void UserManager::handleUserQuit(User* user, ConnectionManager *connManager, ChannelManager *chanManager, const std::string& quitMessage)
 {
-    if (!user)
+	(void) quitMessage;
+  if (!user)
 		return;
-    std::map<int, User*>::iterator it = _users.find(user->getFd());
-    if (it == _users.end())
-        return;
-    std::string nick = user->getNickname();
-    std::string message = quitMessage.empty() ? "Client Quit" : quitMessage;
-    std::string quitMsg = ":" + user->getPrefix() + " QUIT :" + message + "\r\n";
-    int fd = user->getFd();
+  int fd = user->getFd();
 	chanManager->removeUserFromAllChannels(user);
     removeUser(fd);
 	connManager->removeConnection(fd);

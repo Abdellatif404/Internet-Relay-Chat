@@ -4,14 +4,14 @@ bool NickCommand::execute(User* user, const std::vector<std::string>& params, Us
 {
     if (!user->isAuthenticated())
 	{
-        std::string error = ":" + userManager->getServerName() + " " + std::string(ERR_PASSWDMISMATCH) + " * :Password required\r\n";
+        std::string error = ":" + userManager->getServerName() + " " + ERR_PASSWDMISMATCH + " * :Password required\r\n";
         userManager->sendMessage(user, error);
         return false;
     }
     if (params.empty())
 	{
         std::string nick = user->getNickname().empty() ? "*" : user->getNickname();
-        std::string error = ":" + userManager->getServerName() + " " + std::string(ERR_NONICKNAMEGIVEN) + " " + nick + " :No nickname given\r\n";
+        std::string error = ":" + userManager->getServerName() + " " + ERR_NONICKNAMEGIVEN + " " + nick + " :No nickname given\r\n";
         userManager->sendMessage(user, error);
         return false;
     }
@@ -19,14 +19,14 @@ bool NickCommand::execute(User* user, const std::vector<std::string>& params, Us
     if (!User::isValidNickname(nickname))
 	{
         std::string nick = user->getNickname().empty() ? "*" : user->getNickname();
-        std::string error = ":" + userManager->getServerName() + " " + std::string(ERR_ERRONEUSNICKNAME) + " " + nick + " " + nickname + " :Erroneous nickname\r\n";
+        std::string error = ":" + userManager->getServerName() + " " + ERR_ERRONEUSNICKNAME + " " + nick + " " + nickname + " :Erroneous nickname\r\n";
         userManager->sendMessage(user, error);
         return false;
     }
     if (!userManager->registerNickname(user, nickname))
 	{
         std::string nick = user->getNickname().empty() ? "*" : user->getNickname();
-        std::string error = ":" + userManager->getServerName() + " " + std::string(ERR_NICKNAMEINUSE) + " " + nick + " " + nickname + " :Nickname is already in use\r\n";
+        std::string error = ":" + userManager->getServerName() + " " + ERR_NICKNAMEINUSE + " " + nick + " " + nickname + " :Nickname is already in use\r\n";
         userManager->sendMessage(user, error);
         return false;
     }
