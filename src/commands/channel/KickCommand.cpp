@@ -78,6 +78,5 @@ void KickCommand::broadcastKick(User* kicker, User* kicked,
     if (channel) {
         // Send to all members including the kicked user
         channel->broadcastMessage(kickMsg, NULL);
-        _sendQueue->enqueueMessage(kicked->getFd(), kickMsg);
     }
 }

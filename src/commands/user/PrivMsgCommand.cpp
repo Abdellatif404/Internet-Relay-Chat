@@ -2,7 +2,6 @@
 #include "User.hpp"
 #include "UserManager.hpp"
 #include "BotManager.hpp"
-#include <iostream>
 
 bool PrivMsgCommand::execute(User* user, const std::vector<std::string>& params, UserManager* userManager, ChannelManager* channelManager, BotManager* botManager) {
     if (!user->isRegistered()) {
@@ -26,8 +25,15 @@ bool PrivMsgCommand::execute(User* user, const std::vector<std::string>& params,
     if (target[0] == '#' || target[0] == '&') {
         // Channel message
         if (channelManager) {
-            // Will be implemented when channel system is integrated
-            std::cout << "Channel message to " << target << ": " << message << std::endl;
+            Channel* channel = channelManager->getChannel(target);
+            if (channel && channel->isMember(user)) {
+                // Format message according to IRC protocol
+                std::string prefix = user->getPrefix();
+                std::string formattedMsg = ":" + prefix + " PRIVMSG " + target + " :" + message + "\r\n";
+                channel->broadcastMessage(formattedMsg, user);
+            } else {
+                userManager->sendError(user, 403, target + " :No such channel");
+            }
         } else {
             userManager->sendError(user, 403, target + " :No such channel");
         }
@@ -42,7 +48,6 @@ bool PrivMsgCommand::execute(User* user, const std::vector<std::string>& params,
                 return true;
             }
         }
-        
         // If not a bot, send as regular private message
         userManager->sendPrivateMessage(user, target, message);
     }

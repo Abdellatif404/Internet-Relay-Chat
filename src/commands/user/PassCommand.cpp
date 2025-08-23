@@ -17,10 +17,7 @@ bool PassCommand::execute(User* user, const std::vector<std::string>& params, Us
     }
     std::string password = params[0];
     if (userManager->authenticateUser(user, password))
-	{
-        std::cout << "User on fd " << user->getFd() << " authenticated successfully" << std::endl;
         return true;
-    }
 	else
 	{
         std::string error = ":" + userManager->getServerName() + " " + ERR_PASSWDMISMATCH + " * :Password incorrect\r\n";

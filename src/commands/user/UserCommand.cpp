@@ -32,7 +32,6 @@ bool UserCommand::execute(User* user, const std::vector<std::string>& params, Us
     }
     user->setUsername(username);
     user->setRealname(realname);
-    std::cout << "User info set for fd " << user->getFd() << ": " << username << " (" << realname << ")" << std::endl;
     if (userManager->tryCompleteRegistration(user))
         std::cout << "User " << user->getNickname() << " registration completed!" << std::endl;
     return true;

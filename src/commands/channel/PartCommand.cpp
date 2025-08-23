@@ -73,6 +73,5 @@ void PartCommand::sendPartMessage(User* user, const std::string& channelName, co
     if (channel) {
         // Send to all members including the user who's leaving
         channel->broadcastMessage(partMsg, NULL);
-        _sendQueue->enqueueMessage(user->getFd(), partMsg);
     }
 }

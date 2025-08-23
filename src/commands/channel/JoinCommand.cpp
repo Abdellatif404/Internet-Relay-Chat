@@ -107,7 +107,6 @@ void JoinCommand::sendJoinMessages(User* user, const std::string& channelName) {
     if (channel) {
         // Send to all members including the user who joined
         channel->broadcastMessage(joinMsg, NULL);
-        _sendQueue->enqueueMessage(user->getFd(), joinMsg);
 
         // Send topic if it exists
         if (!channel->getTopic().empty()) {

@@ -10,7 +10,7 @@ void	signalHandler(int signal)
 	(void)signal;
 	g_running = false;
 	if (g_server)
-		std::cout << RED << "Server shutting down..." << RESET << std::endl;
+		std::cerr << RED << "Server shutting down..." << RESET << std::endl;
 }
 
 int	validate_port(char *str)

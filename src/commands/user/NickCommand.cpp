@@ -30,7 +30,6 @@ bool NickCommand::execute(User* user, const std::vector<std::string>& params, Us
         userManager->sendMessage(user, error);
         return false;
     }
-    std::cout << "Nickname set to: " << nickname << " for fd " << user->getFd() << std::endl;
     if (userManager->tryCompleteRegistration(user))
         std::cout << "User " << user->getNickname() << " registration completed!" << std::endl;
     return true;

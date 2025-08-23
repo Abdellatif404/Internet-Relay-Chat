@@ -1,10 +1,7 @@
 #include "IRCBot.hpp"
 #include "UserManager.hpp"
 #include "ChannelManager.hpp"
-#include <ctime>
 #include <iomanip>
-#include <sstream>
-#include <cstdlib>
 
 IRCBot::IRCBot(int fd, UserManager* userManager, ChannelManager* channelManager) : User(fd), _userManager(userManager), _channelManager(channelManager), _isActive(true), _startTime(time(NULL))
 {
@@ -354,17 +351,11 @@ void IRCBot::sendMessage(const std::string& target, const std::string& message)
 			{
                 std::string response = ":" + getPrefix() + " PRIVMSG " + target + " :" + message + "\r\n";
                 channel->broadcastMessage(response, this);
-                std::cout << "Bot message to channel " << target << ": " << message << std::endl;
                 return;
             }
-			else
-                std::cout << "Bot: Channel " << target << " doesn't exist" << std::endl;
         }
 		else
-        {
-            std::cout << "Bot message to channel " << target << ": " << message << std::endl;
             return;
-        }
     }
     
     // If not a channel, try to find user
@@ -373,25 +364,7 @@ void IRCBot::sendMessage(const std::string& target, const std::string& message)
     {
         std::string response = ":" + getPrefix() + " PRIVMSG " + target + " :" + message + "\r\n";
         _userManager->sendMessage(targetUser, response);
-        std::cout << "Bot message to " << target << ": " << message << std::endl;
     }
-    else
-        std::cout << "Bot: Target user " << target << " not found" << std::endl;
-}
-
-void IRCBot::sendNotice(const std::string& target, const std::string& message)
-{
-    if (!_userManager)
-        return;
-    User* targetUser = _userManager->getUserByNickname(target);
-    if (targetUser)
-    {
-        std::string response = ":" + getPrefix() + " NOTICE " + target + " :" + message + "\r\n";
-        _userManager->sendMessage(targetUser, response);
-        std::cout << "Bot notice to " << target << ": " << message << std::endl;
-    }
-    else
-        std::cout << "Bot: Target user " << target << " not found for notice" << std::endl;
 }
 
 bool IRCBot::isCommand(const std::string& message)
@@ -442,7 +415,6 @@ void IRCBot::joinChannel(const std::string& channel)
         msg.prefix = getPrefix();
         msg.command = "JOIN";
         msg.params.push_back(channel);
-        std::cout << "Bot joining: " << MessageParser::serialize(msg);
     }
 }
 

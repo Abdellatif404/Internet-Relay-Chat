@@ -1,7 +1,6 @@
 #include "BotCommand.hpp"
 #include "MessageParser.hpp"
 #include "UserManager.hpp"
-#include <sstream>
 
 bool BotCommand::execute(User* user, const std::vector<std::string>& params, BotManager* botManager, UserManager* userManager)
 {
