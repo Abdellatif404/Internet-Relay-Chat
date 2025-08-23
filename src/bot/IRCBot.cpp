@@ -45,6 +45,10 @@ void IRCBot::processMessage(const std::string& sender, const std::string& target
 {
     if (!_isActive)
 		return;
+    
+    // Debug output to help identify the issue
+    std::cout << "Bot processing message from " << sender << " to " << target << ": " << message << std::endl;
+    
     if (target == getNickname())
         processPrivateMessage(sender, message);
     else if (target.substr(0, 1) == "#")
