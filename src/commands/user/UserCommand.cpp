@@ -4,20 +4,20 @@ bool UserCommand::execute(User* user, const std::vector<std::string>& params, Us
 {
     if (!user->isAuthenticated())
 	{
-        std::string error = ":" + userManager->getServerName() + " " + std::string(ERR_PASSWDMISMATCH) + " * :Password required\r\n";
+        std::string error = ":" + userManager->getServerName() + " " +ERR_PASSWDMISMATCH + " * :Password required\r\n";
         userManager->sendMessage(user, error);
         return false;
     }
     if (params.size() < 4)
 	{
         std::string nick = user->getNickname().empty() ? "*" : user->getNickname();
-        std::string error = ":" + userManager->getServerName() + " " + std::string(ERR_NEEDMOREPARAMS) + " " + nick + " USER :Not enough parameters\r\n";
+        std::string error = ":" + userManager->getServerName() + " " +ERR_NEEDMOREPARAMS + " " + nick + " USER :Not enough parameters\r\n";
         userManager->sendMessage(user, error);
         return false;
     }
     if (user->isRegistered())
 	{
-        std::string error = ":" + userManager->getServerName() + " " + std::string(ERR_ALREADYREGISTRED) + " " + user->getNickname() + " :You may not reregister\r\n";
+        std::string error = ":" + userManager->getServerName() + " " +ERR_ALREADYREGISTRED + " " + user->getNickname() + " :You may not reregister\r\n";
         userManager->sendMessage(user, error);
         return false;
     }
@@ -26,13 +26,12 @@ bool UserCommand::execute(User* user, const std::vector<std::string>& params, Us
     if (!User::isValidUsername(username))
 	{
         std::string nick = user->getNickname().empty() ? "*" : user->getNickname();
-        std::string error = ":" + userManager->getServerName() + " " + std::string(ERR_ERRONEUSNICKNAME) + " " + nick + " :Invalid username\r\n";
+        std::string error = ":" + userManager->getServerName() + " " +ERR_ERRONEUSNICKNAME + " " + nick + " :Invalid username\r\n";
         userManager->sendMessage(user, error);
         return false;
     }
     user->setUsername(username);
     user->setRealname(realname);
-    std::cout << "User info set for fd " << user->getFd() << ": " << username << " (" << realname << ")" << std::endl;
     if (userManager->tryCompleteRegistration(user))
         std::cout << "User " << user->getNickname() << " registration completed!" << std::endl;
     return true;

@@ -54,6 +54,9 @@ int SocketHandler::acceptConnection(int fd, soaddr_t *addr)
 		std::cerr << YELLOW << "Failed to accept new connection: " << strerror(errno) << RESET << std::endl;
 		return -1;
 	}
+	std::cout << GREEN << "New client #" << clientFd << " from "
+			  << inet_ntoa(((struct sockaddr_in *)addr)->sin_addr) << ":"
+			  << ntohs(((struct sockaddr_in *)addr)->sin_port) << RESET << std::endl;
 	return clientFd;
 }
 

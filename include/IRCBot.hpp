@@ -29,7 +29,6 @@ private:
     void handleJoke(const std::string& target);
     void handleQuote(const std::string& target);
     void sendMessage(const std::string& target, const std::string& message);
-    void sendNotice(const std::string& target, const std::string& message);
     bool isCommand(const std::string& message);
     std::string extractCommand(const std::string& message);
     std::vector<std::string> extractParams(const std::string& message);

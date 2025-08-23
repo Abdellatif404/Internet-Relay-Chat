@@ -61,5 +61,6 @@ void ConnectionManager::removeConnection(int fd)
 		_events[fd].events = 0;
 		SocketHandler::removeSocket(_epollFd, fd);
 		close(fd);
+		std::cout << YELLOW << "Client #" << fd << " gone away" << RESET << std::endl;
 	}
 }

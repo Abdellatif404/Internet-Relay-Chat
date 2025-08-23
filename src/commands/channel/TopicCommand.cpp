@@ -57,7 +57,10 @@ void TopicCommand::execute(User* user, const std::vector<std::string>& params) {
     }
 
     // Setting topic
-    std::string newTopic = params[1];
+    std::string newTopic;
+	for (std::vector<std::string>::const_iterator it = params.begin() + 1; it != params.end(); ++it) {
+		newTopic += *it + " ";
+	}
 
     // Check if topic is restricted and user is not an operator
     if (channel->isTopicRestricted() && !channel->isOperator(user)) {
@@ -90,6 +93,5 @@ void TopicCommand::broadcastTopicChange(User* user, const std::string& channelNa
     if (channel) {
         // Send to all members including the user who changed the topic
         channel->broadcastMessage(topicMsg, NULL);
-        _sendQueue->enqueueMessage(user->getFd(), topicMsg);
     }
 }

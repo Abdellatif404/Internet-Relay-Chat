@@ -83,7 +83,7 @@ void EventLoop::run()
 
 void EventLoop::stop()
 {
-	std::string message = "Warning: Server is shutting down...\r\n";
+	std::string message = "Server is shutting down...\r\n";
 	ConnectionMap _connections = _connManager->getConnections();
 	for (ConnectionMap::iterator it = _connections.begin(); it != _connections.end(); it++)
 	{

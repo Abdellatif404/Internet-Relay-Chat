@@ -1,7 +1,6 @@
 #include "BotManager.hpp"
 #include "UserManager.hpp"
 #include "ChannelManager.hpp"
-#include <sstream>
 
 BotManager::BotManager(UserManager* userManager, ChannelManager* channelManager) : _userManager(userManager), _channelManager(channelManager), _botsEnabled(true), _nextBotFd(-1000) {}
 
@@ -20,26 +19,20 @@ IRCBot* BotManager::createBot(const std::string& nickname, int virtualFd)
         return NULL;
     if (virtualFd == -1)
         virtualFd = _nextBotFd--;
-    
-    // Create the bot user in UserManager first
     User* user = _userManager->createUser(virtualFd);
     if (!user)
         return NULL;
-        
-    // Set bot properties
     user->setNickname(nickname);
     user->setUsername("bot");
     user->setRealname("IRC Bot");
     user->setHostname(_userManager->getServerName());
     user->setState(REGISTERED);
     user->setAuthenticated(true);
-    
-    // Register the nickname
-    if (!_userManager->registerNickname(user, nickname)) {
+    if (!_userManager->registerNickname(user, nickname))
+	{
         _userManager->removeUser(virtualFd);
         return NULL;
     }
-    
     IRCBot* bot = new IRCBot(virtualFd, _userManager, _channelManager);
     bot->setNickname(nickname);
     _bots[nickname] = bot;
@@ -56,10 +49,7 @@ void BotManager::removeBot(const std::string& nickname)
         std::vector<std::string> channels = bot->getJoinedChannels();
         for (size_t i = 0; i < channels.size(); ++i)
             bot->leaveChannel(channels[i]);
-            
-        // Remove from UserManager
         _userManager->removeUser(bot->getFd());
-        
         delete it->second;
         _bots.erase(it);
         
@@ -106,48 +96,6 @@ void BotManager::processChannelMessage(const std::string& sender, const std::str
     }
 }
 
-void BotManager::notifyUserJoin(const std::string& channel, const std::string& user)
-{
-    if (!_botsEnabled)
-		return;
-    for (std::map<std::string, IRCBot*>::iterator it = _bots.begin(); it != _bots.end(); ++it)
-	{
-        IRCBot* bot = it->second;
-        if (bot->isActive())
-            bot->onUserJoin(channel, user);
-    }
-}
-
-void BotManager::notifyUserLeave(const std::string& channel, const std::string& user)
-{
-    if (!_botsEnabled)
-		return;
-    
-    for (std::map<std::string, IRCBot*>::iterator it = _bots.begin(); it != _bots.end(); ++it)
-	{
-        IRCBot* bot = it->second;
-        if (bot->isActive()) {
-            bot->onUserLeave(channel, user);
-        }
-    }
-}
-
-void BotManager::notifyUserQuit(const std::string& user) {
-    if (!_botsEnabled) return;
-    
-    for (std::map<std::string, IRCBot*>::iterator it = _bots.begin(); it != _bots.end(); ++it) {
-        IRCBot* bot = it->second;
-        if (bot->isActive()) {
-            bot->onUserQuit(user);
-        }
-    }
-}
-
-void BotManager::notifyChannelCreate(const std::string& channel)
-{
-    std::cout << BLUE << "Channel " << channel << " created - bots notified" << RESET << std::endl;
-}
-
 void BotManager::enableBots()
 {
     _botsEnabled = true;
@@ -161,11 +109,6 @@ void BotManager::disableBots()
 }
 
 bool BotManager::areBotsEnabled() const
-{
-    return _botsEnabled;
-}
-
-bool BotManager::isEnabled() const
 {
     return _botsEnabled;
 }
@@ -186,42 +129,4 @@ std::vector<std::string> BotManager::getBotList() const
         botNames.push_back(it->first);
     }
     return botNames;
-}
-
-void BotManager::joinBotToChannel(const std::string& botNick, const std::string& channel)
-{
-    IRCBot* bot = getBot(botNick);
-    if (bot)
-	{
-        bot->joinChannel(channel);
-    }
-}
-
-void BotManager::removeBotFromChannel(const std::string& botNick, const std::string& channel)
-{
-    IRCBot* bot = getBot(botNick);
-    if (bot)
-    	bot->leaveChannel(channel);
-}
-
-void BotManager::broadcastToAllBots(const std::string& message)
-{
-    for (std::map<std::string, IRCBot*>::iterator it = _bots.begin(); it != _bots.end(); ++it)
-	{
-        IRCBot* bot = it->second;
-        if (bot->isActive())
-            std::cout << "Admin message to bot " << it->first << ": " << message << std::endl;
-    }
-}
-
-void BotManager::setupDefaultBot()
-{
-    IRCBot* helpBot = createBot("HelpBot");
-    if (helpBot)
-	{
-        helpBot->addCustomResponse("welcome", "Welcome to our IRC server! I'm here to help you get started.");
-        helpBot->addCustomResponse("rules", "Please be respectful and follow our community guidelines.");
-        helpBot->addCustomResponse("commands", "Available IRC commands: /join, /part, /msg, /nick, /quit");
-        std::cout << GREEN << "Default HelpBot created and configured" << RESET << std::endl;
-    }
 }

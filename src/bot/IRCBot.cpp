@@ -1,10 +1,7 @@
 #include "IRCBot.hpp"
 #include "UserManager.hpp"
 #include "ChannelManager.hpp"
-#include <ctime>
 #include <iomanip>
-#include <sstream>
-#include <cstdlib>
 
 IRCBot::IRCBot(int fd, UserManager* userManager, ChannelManager* channelManager) : User(fd), _userManager(userManager), _channelManager(channelManager), _isActive(true), _startTime(time(NULL))
 {
@@ -84,6 +81,8 @@ void IRCBot::processPrivateMessage(const std::string& sender, const std::string&
             handleUptime(sender);
         else if (command == "userinfo")
             handleUserInfo(sender, params);
+        else if (command == "channelinfo")
+            handleChannelInfo(sender, params);
         else if (command == "channels")
             handleChannels(sender);
         else if (command == "joke")
@@ -108,27 +107,29 @@ void IRCBot::processChannelMessage(const std::string& sender, const std::string&
         std::string command = extractCommand(message);
         std::vector<std::string> params = extractParams(message);
         if (command == "help")
-            handleHelp(sender, params);
+            handleHelp(channel, params);
         else if (command == "time")
-            handleTime(sender);
+            handleTime(channel);
         else if (command == "ping")
-            handlePing(sender, params);
+            handlePing(channel, params);
         else if (command == "echo")
-            handleEcho(sender, params);
+            handleEcho(channel, params);
         else if (command == "version")
-            handleVersion(sender);
+            handleVersion(channel);
         else if (command == "uptime")
-            handleUptime(sender);
+            handleUptime(channel);
         else if (command == "userinfo")
-            handleUserInfo(sender, params);
+            handleUserInfo(channel, params);
         else if (command == "channelinfo")
             handleChannelInfo(channel, params);
         else if (command == "channels")
-            handleChannels(sender);
+            handleChannels(channel);
         else if (command == "joke")
-            handleJoke(sender);
+            handleJoke(channel);
         else if (command == "quote")
-            handleQuote(sender);
+            handleQuote(channel);
+        else
+            sendMessage(channel, "Unknown command. Type !help for available commands.");
     }
     else if (lowerMessage.find(getNickname()) != std::string::npos ||  lowerMessage.find("bot") != std::string::npos)
 	{
@@ -136,11 +137,11 @@ void IRCBot::processChannelMessage(const std::string& sender, const std::string&
 		{
             if (lowerMessage.find(it->first) != std::string::npos)
 			{
-                sendMessage(sender, sender + ": " + it->second);
+                sendMessage(channel, sender + ": " + it->second);
                 return;
             }
         }
-        sendMessage(sender, sender + ": Hello! Type !help to see what I can do.");
+        sendMessage(channel, sender + ": Hello! Type !help to see what I can do.");
     }
 }
 
@@ -249,7 +250,7 @@ void IRCBot::handleChannelInfo(const std::string& target, const std::vector<std:
 	{
         if (target.substr(0, 1) != "#")
 		{
-            sendMessage(target, "This command can only be used in channels or specify a channel name.");
+            sendMessage(target, "Usage: !channelinfo <channel_name> (e.g., !channelinfo #test)");
             return;
         }
         channelName = target;
@@ -335,47 +336,31 @@ void IRCBot::sendMessage(const std::string& target, const std::string& message)
 {
     if (!_userManager)
         return;
+    
+    // First check if target is a channel
+    if (target[0] == '#')
+    {
+        if (_channelManager)
+		{
+            Channel* channel = _channelManager->getChannel(target);
+            if (channel)
+			{
+                std::string response = ":" + getPrefix() + " PRIVMSG " + target + " :" + message + "\r\n";
+                channel->broadcastMessage(response, this);
+                return;
+            }
+        }
+		else
+            return;
+    }
+    
+    // If not a channel, try to find user
     User* targetUser = _userManager->getUserByNickname(target);
     if (targetUser)
     {
         std::string response = ":" + getPrefix() + " PRIVMSG " + target + " :" + message + "\r\n";
         _userManager->sendMessage(targetUser, response);
-        std::cout << "Bot message to " << target << ": " << message << std::endl;
     }
-    else if (target[0] == '#')
-    {
-        if (_channelManager)
-		{
-            Channel* channel = _channelManager->getChannel(target);
-            if (channel && channel->isMember(this))
-			{
-                std::string response = ":" + getPrefix() + " PRIVMSG " + target + " :" + message + "\r\n";
-                channel->broadcastMessage(response, this);
-                std::cout << "Bot message to channel " << target << ": " << message << std::endl;
-            }
-			else
-                std::cout << "Bot: Cannot send to channel " << target << " (not a member or channel doesn't exist)" << std::endl;
-        }
-		else
-            std::cout << "Bot message to channel " << target << ": " << message << std::endl;
-    }
-    else
-        std::cout << "Bot: Target user " << target << " not found" << std::endl;
-}
-
-void IRCBot::sendNotice(const std::string& target, const std::string& message)
-{
-    if (!_userManager)
-        return;
-    User* targetUser = _userManager->getUserByNickname(target);
-    if (targetUser)
-    {
-        std::string response = ":" + getPrefix() + " NOTICE " + target + " :" + message + "\r\n";
-        _userManager->sendMessage(targetUser, response);
-        std::cout << "Bot notice to " << target << ": " << message << std::endl;
-    }
-    else
-        std::cout << "Bot: Target user " << target << " not found for notice" << std::endl;
 }
 
 bool IRCBot::isCommand(const std::string& message)
@@ -426,7 +411,6 @@ void IRCBot::joinChannel(const std::string& channel)
         msg.prefix = getPrefix();
         msg.command = "JOIN";
         msg.params.push_back(channel);
-        std::cout << "Bot joining: " << MessageParser::serialize(msg) << std::endl;
     }
 }
 
@@ -447,7 +431,7 @@ void IRCBot::leaveChannel(const std::string& channel)
         msg.command = "PART";
         msg.params.push_back(channel);
         msg.trailing = "Bot leaving channel";
-        std::cout << "Bot leaving: " << MessageParser::serialize(msg) << std::endl;
+        std::cout << "Bot leaving: " << MessageParser::serialize(msg);
     }
 }
 

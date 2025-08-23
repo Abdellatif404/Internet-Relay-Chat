@@ -1,8 +1,7 @@
 #ifndef PRIVMSGCOMMAND_HPP
 #define PRIVMSGCOMMAND_HPP
 
-#include <string>
-#include <vector>
+#include "ft_irc.hpp"
 
 class User;
 class UserManager;

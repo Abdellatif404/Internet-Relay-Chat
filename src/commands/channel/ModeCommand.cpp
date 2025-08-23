@@ -213,6 +213,5 @@ void ModeCommand::sendModeReply(User* user, const std::string& channelName,
     if (channel) {
         // Send to all members including the user who changed the mode
         channel->broadcastMessage(modeMsg, NULL);
-        _sendQueue->enqueueMessage(user->getFd(), modeMsg);
     }
 }

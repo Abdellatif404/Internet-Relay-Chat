@@ -1,8 +1,7 @@
 #ifndef QUITCOMMAND_HPP
 #define QUITCOMMAND_HPP
 
-#include <string>
-#include <vector>
+#include "ft_irc.hpp"
 
 class User;
 class UserManager;

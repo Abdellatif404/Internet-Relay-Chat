@@ -1,7 +1,6 @@
 #include "QuitCommand.hpp"
 #include "User.hpp"
 #include "UserManager.hpp"
-#include <iostream>
 
 bool QuitCommand::execute(User* user, const std::vector<std::string>& params, UserManager* userManager, ConnectionManager *connManager, ChannelManager *chanManager) {
     std::string quitMessage = parseQuitMessage(params);

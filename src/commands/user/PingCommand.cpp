@@ -24,7 +24,5 @@ bool PingCommand::execute(User* user, const std::vector<std::string>& params, Us
 bool PongCommand::execute(User* user, const std::vector<std::string>&, UserManager*) {
     // Update user's last ping time to prevent timeout
     user->updateLastPing();
-    
-    std::cout << "Received PONG from " << user->getNickname() << std::endl;
     return true;
 }
